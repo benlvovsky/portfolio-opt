@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import PyQt4
 import matplotlib
 matplotlib.use('qt4agg')
@@ -13,8 +14,25 @@ sns.set()
 def main():
     sharpeAndCml()
 
-def sharpeAndCml():
+def toJson(port):
+    string = '{"Portfolio": {"name":%s},\n' % port.name
+    string += '{"return":%10.3f},\n' % port.portfolio_return
+    string += '{"volatility":%10.3f},\n' % math.sqrt(port.variance)
+    string += '{"Sharpe ratio":%10.3f},\n' % (port.portfolio_return /
+                                         math.sqrt(port.variance))
+    string += '{"Positions":[\n'
+#         string += 'symbol | weight | ret. con. \n'
+    for i in range(len(port.symbols)):
+        string += '{\n'
+        string += "{" + '"symbol":"{:}"'.format(port.symbols[i]) + "},\n"
+        string += "{" + '"weight":{:6.3f}'.format(port.weights[i]) + "},\n"
+        string += "{" + '"mean_return":{:9.3f}'.format(port.mean_returns[i]) + "}\n"
+        string += '},\n'
+    string += ']}\n'
 
+    return string
+
+def sharpeAndCml():
     # ### Sharpe Ratio
 
     # We start by instantiating a `market environment` object which in particular contains a list of **ticker symbols** in which we are interested in.
@@ -28,20 +46,22 @@ def sharpeAndCml():
     port = mean_variance_portfolio('am_tech_stocks', ma)
     # instantiates the portfolio class
     # and retrieves all the time series data needed")
-    
     # Often, the target of the portfolio optimization efforts is the so called **Sharpe ratio**. The `mean_variance_portfolio` class of DX Analytics assumes a **risk-free rate of zero** in this context.
-    print 'Often, the target of the portfolio optimization efforts is the so called **Sharpe ratio**. The `mean_variance_portfolio` class of DX Analytics assumes a **risk-free rate of zero** in this context.'
-    
     port.optimize('Sharpe')
-      # maximize Sharpe ratio
+    # maximize Sharpe ratio
 
-    print(port)
+#     print(port)
+    print toJson(port)
 
     # ## Efficient Frontier
     
     # Another application area is to derive the **efficient frontier** in the mean-variance space. These are all these portfolios for which there is **no portfolio with both lower risk and higher return**. The method `get_efficient_frontier` yields the desired results.
-    print 'Another application area is to derive the **efficient frontier** in the mean-variance space. These are all these portfolios for which there is **no portfolio with both lower risk and higher return**. The method `get_efficient_frontier` yields the desired results.'
-    
+    print '''
+    Derive the **efficient frontier** in the mean-variance space. 
+    These are all these portfolios for which there is **no portfolio
+          with both lower risk and higher return**
+          '''
+
     evols, erets = port.get_efficient_frontier(100)
     # 100 points of the effient frontier')
     # The plot with the **random and efficient portfolios**.
