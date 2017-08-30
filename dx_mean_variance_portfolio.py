@@ -8,29 +8,52 @@ import matplotlib.pyplot as plt
 
 from dx import *
 import seaborn as sns;
+import copy
 
 sns.set()
 
 def main():
     sharpeAndCml()
 
-def toJson(port):
-    string = '{"Portfolio": {"name":%s},\n' % port.name
-    string += '{"return":%10.3f},\n' % port.portfolio_return
-    string += '{"volatility":%10.3f},\n' % math.sqrt(port.variance)
-    string += '{"Sharpe ratio":%10.3f},\n' % (port.portfolio_return /
+def portToJson(port):
+    string = '{"Portfolio":\n {\n'
+    string += '"name":"%s",\n' % port.name
+    string += '"return":%10.3f,\n' % port.portfolio_return
+    string += '"volatility":%10.3f,\n' % math.sqrt(port.variance)
+    string += '"Sharpe ratio":%10.3f,\n' % (port.portfolio_return /
                                          math.sqrt(port.variance))
-    string += '{"Positions":[\n'
+    string += '"Positions":[\n'
 #         string += 'symbol | weight | ret. con. \n'
     for i in range(len(port.symbols)):
         string += '{\n'
-        string += "{" + '"symbol":"{:}"'.format(port.symbols[i]) + "},\n"
-        string += "{" + '"weight":{:6.3f}'.format(port.weights[i]) + "},\n"
-        string += "{" + '"mean_return":{:9.3f}'.format(port.mean_returns[i]) + "}\n"
-        string += '},\n'
-    string += ']}\n'
+        string += '"symbol":"{:}"'.format(port.symbols[i]) + ",\n"
+        string += '"weight":{:6.3f}'.format(port.weights[i]) + ",\n"
+        string += '"mean_return":{:9.3f}'.format(port.mean_returns[i]) + "\n"
+        string += '}\n'
+        if i < len(port.symbols) - 1:
+            string += ','
+
+    string += ']\n}\n}\n'
 
     return string
+
+def portListToJson(portList):
+    string = '{"Efficient Portfolios":[\n' 
+    for i in range(len(portList)):
+        string += portToJson(portList[i])
+        if i < len(portList) - 1:
+            string += ','
+
+    string += ']}\n'
+    return string
+
+def getEfficientFrontierPortfolios(port, evols):
+    portfolios = list()
+    for v in evols:
+        port.optimize('Return', constraint=v, constraint_type='Exact')
+        portfolios.append(copy.copy(port))
+    
+    return portfolios
 
 def sharpeAndCml():
     # ### Sharpe Ratio
@@ -51,7 +74,7 @@ def sharpeAndCml():
     # maximize Sharpe ratio
 
 #     print(port)
-    print toJson(port)
+    print portToJson(port)
 
     # ## Efficient Frontier
     
@@ -63,25 +86,36 @@ def sharpeAndCml():
           '''
 
     evols, erets = port.get_efficient_frontier(100)
+    
+    efficientPortfolios = getEfficientFrontierPortfolios(port, evols)
+    print portListToJson(efficientPortfolios)
+    exit(1)
+#     print evols
+#     exit(1)
     # 100 points of the effient frontier')
     # The plot with the **random and efficient portfolios**.
-    plt.figure(figsize=(10, 6))
-#     plt.scatter(vols, rets, c=rets / vols, marker='o')
-    plt.scatter(evols, erets, c=erets / evols, marker='x')
-    plt.xlabel('expected volatility')
-    plt.ylabel('expected return')
-    plt.colorbar(label='Sharpe ratio')
-    plt.show()
+#     plt.figure(figsize=(10, 6))
+# #     plt.scatter(vols, rets, c=rets / vols, marker='o')
+#     plt.scatter(evols, erets, c=erets / evols, marker='x')
+#     plt.xlabel('expected volatility')
+#     plt.ylabel('expected return')
+#     plt.colorbar(label='Sharpe ratio')
+#     plt.show()
     # ## Capital Market Line
-    
+
     # The **capital market line** is another key element of the mean-variance portfolio approach representing all those risk-return combinations (in mean-variance space) that are possible to form from a **risk-less money market account** and **the market portfolio** (or another appropriate substitute efficient portfolio).
-    print 'The **capital market line** is another key element of the mean-variance portfolio approach representing all those risk-return combinations (in mean-variance space) that are possible to form from a **risk-less money market account** and **the market portfolio** (or another appropriate substitute efficient portfolio).'
-    
+    print '''
+    The **capital market line** is another key element of the mean-variance portfolio approach representing
+    all those risk-return combinations (in mean-variance space) that are possible to form from a 
+    **risk-less money market account** and **the market portfolio** (or another appropriate substitute efficient portfolio).
+    '''
+
     cml, optv, optr = port.get_capital_market_line(riskless_asset=0.05)
+
     # capital market line for effiecient frontier and risk-less short rate')
     print 'capital market line for effiecient frontier and risk-less short rate'
-    cml  # lambda function for capital market line
-    print cml  # lambda function for capital market line
+#     cml  # lambda function for capital market line
+#     print cml  # lambda function for capital market line
     
     # The following plot illustrates that the capital market line has an ordinate value equal to the **risk-free rate** (the safe return of the money market account) and is tangent to the **efficient frontier**.
     print 'The following plot illustrates that the capital market line has an ordinate value equal to the **risk-free rate** (the safe return of the money market account) and is tangent to the **efficient frontier**.'
