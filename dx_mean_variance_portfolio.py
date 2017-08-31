@@ -10,6 +10,8 @@ from dx import *
 import seaborn as sns;
 import copy
 
+import meanvarianceportfolio as mvp
+
 sns.set()
 
 def main():
@@ -66,7 +68,8 @@ def sharpeAndCml():
 
     # Using pandas under the hood, the class **retrieves historial stock price data** from either Yahoo! Finance of Google.
 
-    port = mean_variance_portfolio('am_tech_stocks', ma)
+#     port = mean_variance_portfolio('am_tech_stocks', ma)
+    port = mvp.MeanVariancePortfolio('am_tech_stocks', ma)
     # instantiates the portfolio class
     # and retrieves all the time series data needed")
     # Often, the target of the portfolio optimization efforts is the so called **Sharpe ratio**. The `mean_variance_portfolio` class of DX Analytics assumes a **risk-free rate of zero** in this context.
@@ -85,10 +88,12 @@ def sharpeAndCml():
           with both lower risk and higher return**
           '''
 
-    evols, erets = port.get_efficient_frontier(100)
+#     evols, erets = port.get_efficient_frontier(100)
+    effFrontier = port.get_efficient_frontier_bl(100)
     
-    efficientPortfolios = getEfficientFrontierPortfolios(port, evols)
-    print portListToJson(efficientPortfolios)
+#     efficientPortfolios = getEfficientFrontierPortfolios(port, evols)
+#     print portListToJson(efficientPortfolios)
+    print effFrontier.toJson()
     exit(1)
 #     print evols
 #     exit(1)
