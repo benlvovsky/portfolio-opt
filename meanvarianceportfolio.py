@@ -4,6 +4,20 @@ import scipy.interpolate as sci
 import scipy.optimize as sco
 import numpy as np
 
+class CPL(object):
+    def __init__(self, port, vol, ret):
+        self.port = port
+        self.vol = vol
+        self.ret = ret
+        self.port.optimize('Vol', constraint=float(self.ret), constraint_type='Exact')
+
+    def toJson(self):
+        s = '{"OptimalPorfolio":\n{'
+        s += '"opt_vol":{:},\n"opt_ret":{:}\n,"OP":'.format(self.vol, self.ret)
+        s += self.port.toJson()
+        s += '\n}\n}'
+        return s
+
 class EfficientFrontier(object):
     def __init__(self, vols, rets, sharpe, weights, symbols):
         self.vols = vols
@@ -65,7 +79,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
     
         return s
     
-    def get_capital_market_line(self, riskless_asset, x, y):
+    def get_capital_market_line_bl(self, x, y, riskless_asset):
         '''
         Returns the capital market line as a lambda function and
         the coordinates of the intersection between the captal market
@@ -100,7 +114,9 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
         opt_return = f_eff(zero_x)
         cpl = lambda x: f_eff_der(zero_x) * x + riskless_asset
-        return cpl, zero_x, float(opt_return)
+#         return cpl, zero_x, float(opt_return)
+
+        return CPL(self, zero_x, float(opt_return))
 
     def get_efficient_frontier_bl(self, n):
         '''

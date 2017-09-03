@@ -73,20 +73,20 @@ def sharpeAndCml():
     # instantiates the portfolio class
     # and retrieves all the time series data needed")
     # Often, the target of the portfolio optimization efforts is the so called **Sharpe ratio**. The `mean_variance_portfolio` class of DX Analytics assumes a **risk-free rate of zero** in this context.
-    port.optimize('Sharpe')
+#     port.optimize('Sharpe')
     # maximize Sharpe ratio
 
 #     print(port)
-    print portToJson(port)
+#     print portToJson(port)
 
     # ## Efficient Frontier
     
     # Another application area is to derive the **efficient frontier** in the mean-variance space. These are all these portfolios for which there is **no portfolio with both lower risk and higher return**. The method `get_efficient_frontier` yields the desired results.
-    print '''
-    Derive the **efficient frontier** in the mean-variance space. 
-    These are all these portfolios for which there is **no portfolio
-          with both lower risk and higher return**
-          '''
+#     print '''
+#     Derive the **efficient frontier** in the mean-variance space. 
+#     These are all these portfolios for which there is **no portfolio
+#           with both lower risk and higher return**
+#           '''
 
 #     evols, erets = port.get_efficient_frontier(100)
     effFrontier = port.get_efficient_frontier_bl(100)
@@ -94,7 +94,6 @@ def sharpeAndCml():
 #     efficientPortfolios = getEfficientFrontierPortfolios(port, evols)
 #     print portListToJson(efficientPortfolios)
     print effFrontier.toJson()
-    exit(1)
 #     print evols
 #     exit(1)
     # 100 points of the effient frontier')
@@ -109,45 +108,45 @@ def sharpeAndCml():
     # ## Capital Market Line
 
     # The **capital market line** is another key element of the mean-variance portfolio approach representing all those risk-return combinations (in mean-variance space) that are possible to form from a **risk-less money market account** and **the market portfolio** (or another appropriate substitute efficient portfolio).
-    print '''
-    The **capital market line** is another key element of the mean-variance portfolio approach representing
-    all those risk-return combinations (in mean-variance space) that are possible to form from a 
-    **risk-less money market account** and **the market portfolio** (or another appropriate substitute efficient portfolio).
-    '''
+#     print '''
+#     The **capital market line** is another key element of the mean-variance portfolio approach representing
+#     all those risk-return combinations (in mean-variance space) that are possible to form from a 
+#     **risk-less money market account** and **the market portfolio** (or another appropriate substitute efficient portfolio).
+#     '''
 
-    cml, optv, optr = port.get_capital_market_line(riskless_asset=0.05)
+    cpl = port.get_capital_market_line_bl(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
 
     # capital market line for effiecient frontier and risk-less short rate')
-    print 'capital market line for effiecient frontier and risk-less short rate'
+#     print 'capital market line for effiecient frontier and risk-less short rate'
 #     cml  # lambda function for capital market line
 #     print cml  # lambda function for capital market line
     
     # The following plot illustrates that the capital market line has an ordinate value equal to the **risk-free rate** (the safe return of the money market account) and is tangent to the **efficient frontier**.
-    print 'The following plot illustrates that the capital market line has an ordinate value equal to the **risk-free rate** (the safe return of the money market account) and is tangent to the **efficient frontier**.'
-    plt.figure(figsize=(10, 6))
-    plt.plot(evols, erets, lw=2.0, label='efficient frontier')
-    plt.plot((0, 0.4), (cml(0), cml(0.4)), lw=2.0, label='capital market line')
-    plt.plot(optv, optr, 'r*', markersize=10, label='optimal portfolio')
-    plt.legend(loc=0)
-    plt.ylim(0)
-    plt.xlabel('expected volatility')
-    plt.ylabel('expected return')
-    plt.show()
+#     print 'The following plot illustrates that the capital market line has an ordinate value equal to the **risk-free rate** (the safe return of the money market account) and is tangent to the **efficient frontier**.'
+#     plt.figure(figsize=(10, 6))
+#     plt.plot(evols, erets, lw=2.0, label='efficient frontier')
+#     plt.plot((0, 0.4), (cml(0), cml(0.4)), lw=2.0, label='capital market line')
+#     plt.plot(optv, optr, 'r*', markersize=10, label='optimal portfolio')
+#     plt.legend(loc=0)
+#     plt.ylim(0)
+#     plt.xlabel('expected volatility')
+#     plt.ylabel('expected return')
+#     plt.show()
 
     # Portfolio return and risk of the efficient portfolio used are:
-    print 'Portfolio return and risk of the efficient portfolio used are:'
-    print optr
-    print optv
-
-    # The **portfolio composition** can be derived as follows.
-    print 'The **portfolio composition** can be derived as follows.'
-    port.optimize('Vol', constraint=optr, constraint_type='Exact')
-    print(port)
-
-    # Or also in this way.
-    print 'Or also in this way.'
-    port.optimize('Return', constraint=optv, constraint_type='Exact')
-    print(port)
+#     print 'Portfolio return and risk of the efficient portfolio used are:'
+#     print optr
+#     print optv
+# 
+#     # The **portfolio composition** can be derived as follows.
+#     print 'The **portfolio composition** can be derived as follows.'
+#     port.optimize('Vol', constraint=optr, constraint_type='Exact')
+    print cpl.toJson()
+# 
+#     # Or also in this way.
+#     print 'Or also in this way.'
+#     port.optimize('Return', constraint=optv, constraint_type='Exact')
+#     print(port)
     
 def various():
     # ## Market Environment and Portfolio Object
