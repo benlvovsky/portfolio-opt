@@ -5,16 +5,17 @@ import scipy.optimize as sco
 import numpy as np
 
 class CPL(object):
-    def __init__(self, port, vol, ret):
+    def __init__(self, port, vol, ret, riskFree):
         self.port = port
         self.vol = vol
         self.ret = ret
+        self.riskFree = riskFree
         self.port.optimize('Vol', constraint=float(self.ret), constraint_type='Exact')
 
     def toJson(self):
         s = '{"OptimalPorfolio":\n{'
-        s += '"opt_vol":{:},\n"opt_ret":{:}\n,"OP":'.format(self.vol, self.ret)
-        s += self.port.toJson()
+        s += '"opt_vol":{:},\n"opt_ret":{:}\n,"riskfree_ret":{:}\n,'.format(self.vol, self.ret, self.riskFree)
+        s += '"OP":' + self.port.toJson()
         s += '\n}\n}'
         return s
 
@@ -116,7 +117,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         cpl = lambda x: f_eff_der(zero_x) * x + riskless_asset
 #         return cpl, zero_x, float(opt_return)
 
-        return CPL(self, zero_x, float(opt_return))
+        return CPL(self, zero_x, float(opt_return), riskless_asset)
 
     def get_efficient_frontier_bl(self, n):
         '''
