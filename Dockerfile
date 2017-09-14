@@ -9,6 +9,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc
 
 RUN apt-get update \
     && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends apt-utils \
     && apt-get install -y wget \
     && apt-get install -y --allow-unauthenticated \
     build-essential \
@@ -36,9 +37,9 @@ RUN apt-get update \
     && apt-get autoremove \
     && apt-get clean
 
-RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - && apt-get install -yq nodejs
-RUN update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
-RUN npm install -g npm
+#RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - && apt-get install -yq nodejs
+#RUN update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
+#RUN npm install -g npm
 
 RUN pip install -U pip setuptools
 RUN pip install -U pandas
