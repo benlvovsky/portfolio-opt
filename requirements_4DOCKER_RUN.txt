@@ -1,39 +1,3 @@
-# financials scientific libs python 2.7 build
-FROM python:2
-MAINTAINER Benjamin Lvovsky, ben@lvovsky.com
-WORKDIR /usr/src/app
-
-RUN apt-get update
-RUN apt-get upgrade -y 
-RUN apt-get install -y \
-    libssl-dev \
-    libffi-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-	git \
-    wget \
-    curl \
-    vim \
-    python-qt4 	    # not needed in non interactive version. TODO: remove for prod \
-	libxml2-dev \
-	libxslt-dev \
-	python-dev \
-	zlib1g-dev
-
-#    postgresql-client-9.6 postgresql-contrib-9.6 \
-#    && apt-get autoremove \
-#    && apt-get clean
-
-#RUN apt-get install -y python-numpy
-#RUN apt-get install -y python-pandas
-#RUN apt-get install -y python-scipy
-#RUN apt-get install -y python-matplotlib
-#RUN apt-get install -y python-scikit-learn
-#COPY requirements.txt ./
-
-#RUN pip install --no-cache-dir -r requirements.txt
-
 RUN pip install 'scipy==0.13.3'
 RUN pip install 'seaborn==0.8'
 RUN pip install 'sqlparse==0.1.19'
@@ -49,7 +13,7 @@ RUN pip install 'pyxdg==0.25'
 RUN pip install 'PyYAML==3.12'
 RUN pip install 'pyzmq==14.0.1'
 RUN pip install 'qtconsole==4.3.1'
-
+RUN pip install ''
 RUN pip install 'pyinotify==0.9.4'
 RUN pip install 'pyOpenSSL==0.13'
 RUN pip install 'pyparsing==2.0.1'
@@ -90,7 +54,7 @@ RUN pip install 'Flask-Security==1.7.5'
 RUN pip install 'Flask-SQLAlchemy==2.1'
 RUN pip install 'Flask-WTF==0.12'
 RUN pip install 'functools32==3.2.3.post2'
-
+RUN pip install 'matplotlib==1.3.1'
 RUN pip install 'nbconvert==5.2.1'
 RUN pip install 'nbformat==4.4.0'
 RUN pip install 'netifaces==0.8'
@@ -104,14 +68,7 @@ RUN pip install 'patsy==0.4.1'
 RUN pip install 'psycopg2==2.6.2'
 RUN pip install 'ptyprocess==0.5.2'
 RUN pip install 'pycrypto==2.6.1'
-#RUN pip install 'pycups==1.9.66'
-#RUN pip install 'pycurl==7.19.3'
-#RUN pip install 'pyflakes==1.0.0'
-#RUN pip install 'Pygments==2.2.0'
-
-RUN pip install 'matplotlib==1.3.1'
-
-RUN mkdir -p /usr/src/app
-COPY . .
-
-CMD ["python", "./markowitz.py"]
+RUN pip install 'pycups==1.9.66'
+RUN pip install 'pycurl==7.19.3'
+RUN pip install 'pyflakes==1.0.0'
+RUN pip install 'Pygments==2.2.0'
