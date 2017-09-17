@@ -4,7 +4,7 @@ import json
 from dx import *
 import seaborn as sns;
 import copy
-
+import settings as st
 import meanvarianceportfolio as mvp
 
 sns.set()
@@ -26,7 +26,7 @@ def sharpeAndCml():
     ma.add_constant('source', 'google')
     ma.add_constant('final date', dt.date(2014, 3, 1))
     port = mvp.MeanVariancePortfolio('am_tech_stocks', ma)
-    effFrontier = port.get_efficient_frontier_bl(100)
+    effFrontier = port.get_efficient_frontier_bl(st.config["efficient_frontier"]["points_number"])
     
     retVal = '{\n'
     retVal += '"EfficientPortfolios":'

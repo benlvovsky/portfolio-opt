@@ -1,0 +1,4 @@
+common: 
+  PGHOST: 'postgres-cont'
+efficient_frontier:
+  points_number: 30
