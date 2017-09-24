@@ -10,7 +10,7 @@ import meanvarianceportfolio as mvp
 sns.set()
 
 def main():
-    sharpeAndCml()
+    sharpeAndCml(source='upload')
 
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
@@ -20,10 +20,10 @@ def getEfficientFrontierPortfolios(port, evols):
     
     return portfolios
 
-def sharpeAndCml():
+def sharpeAndCml(source='google', symbols=['AAPL', 'GOOG', 'MSFT', 'FB']):
     ma = market_environment('ma', dt.date(2010, 1, 1))
-    ma.add_list('symbols', ['AAPL', 'GOOG', 'MSFT', 'FB'])
-    ma.add_constant('source', 'google')
+    ma.add_list('symbols', symbols)
+    ma.add_constant('source', source)
     ma.add_constant('final date', dt.date(2014, 3, 1))
     port = mvp.MeanVariancePortfolio('am_tech_stocks', ma)
     effFrontier = port.get_efficient_frontier_bl(st.config["efficient_frontier"]["points_number"])

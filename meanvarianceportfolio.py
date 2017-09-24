@@ -3,6 +3,7 @@ import math
 import scipy.interpolate as sci
 import scipy.optimize as sco
 import numpy as np
+import pandas as pd
 
 class CPL(object):
     def __init__(self, port, vol, ret, riskFree):
@@ -167,3 +168,36 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             sharpe.append(0)
 
         return EfficientFrontier(vols, rets, sharpe, weights, self.symbols)
+
+    def load_data(self):
+        '''
+        Loads asset values from the web (using super) or loaded csv if was uploaded.
+        '''
+
+        if self.source == 'upload':
+            df = pd.DataFrame()
+            df = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
+                             sep=';', parse_dates=['date'])
+            df.to_csv('converted.csv', date_format='%d/%m/%Y')
+            symbolsDf = df.drop_duplicates(['symbol'])['symbol'].values
+
+            dfRet = pd.DataFrame()
+            for i, sym in enumerate(symbolsDf):
+                print (sym)
+                newSymData = df.loc[df['symbol'] == sym][['date', 'close']]
+                newSymData.columns = ['date', sym]
+#                 newSymData.set_index('date')
+                print (type(newSymData))
+                print (newSymData)
+                print i
+#                 dfRet[sym] = newSymData['close']
+                if i < 1:
+                    dfRet = newSymData.copy()
+#                     dfRet.set_index('date')
+                else:
+                    dfRet = pd.merge(dfRet, newSymData, on='date')
+
+            dfRet.to_csv('symbolsTransposed.csv')
+            exit(0)
+        else:
+            super.load_data()
