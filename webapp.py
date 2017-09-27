@@ -7,9 +7,12 @@ import os
 
 app = Flask(__name__)
 
-@app.route('/hw')
+@app.route('/health')
 def hello_world():
-    return 'Hello, World!'
+    return '''
+    {
+    result: OK
+    }'''
 
 @app.route('/ef')
 def efficientFrontier():
