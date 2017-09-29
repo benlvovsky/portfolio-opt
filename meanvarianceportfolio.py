@@ -55,19 +55,21 @@ class EfficientFrontier(object):
 
         return s
 
+
 class MeanVariancePortfolio(dx.mean_variance_portfolio):
+
+    def preInit(self):
+        if self.mar_env.get_constant('source') == 'upload':
+            self.dfUploadData = pd.DataFrame()
+            self.dfUploadData = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
+                             sep=';', parse_dates=['date'])
+            self.symbolsDf = self.dfUploadData.drop_duplicates(['symbol'])['symbol'].values
+            self.mar_env.add_list('symbols', self.symbolsDf)
+            self.mar_env.add_constant('final date', dt.date(2014, 3, 1)) # Not used fro upload
 
     def __init__(self, name, mar_env):
         self.mar_env = mar_env
-        if self.mar_env.get_constant('source') == 'upload':
-            self.df = pd.DataFrame()
-            self.df = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
-                             sep=';', parse_dates=['date'])
-            self.symbolsDf = self.df.drop_duplicates(['symbol'])['symbol'].values
-            self.mar_env.add_list('symbols', self.symbolsDf)
-            self.mar_env.add_constant('final date', dt.date(2014, 3, 1)) # TODO: calculate from uploaded data
-#             print self.symbolsDf
-
+        self.preInit()
         super(MeanVariancePortfolio, self).__init__(name, self.mar_env)
 
     def toJson(self):
@@ -182,29 +184,16 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
     def load_data(self):
         '''
-        Loads asset values from the web (using super) or loaded csv if was uploaded.
+        Overridden loads csv if was uploaded or calls super implementation
         '''
 
         if self.source == 'upload':
-#             df = pd.DataFrame()
-#             df = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
-#                              sep=';', parse_dates=['date'])
-# #             df.to_csv('converted.csv', date_format='%d/%m/%Y')
-#             symbolsDf = df.drop_duplicates(['symbol'])['symbol'].values
-
             dfRet = pd.DataFrame()
             for i, sym in enumerate(self.symbolsDf):
-#                 print (sym)
-                newSymData = self.df.loc[self.df['symbol'] == sym][['date', 'close']]
+                newSymData = self.dfUploadData.loc[self.dfUploadData['symbol'] == sym][['date', 'close']]
                 newSymData.columns = ['date', sym]
-#                 newSymData.set_index('date')
-#                 print (type(newSymData))
-#                 print (newSymData)
-#                 print i
-#                 dfRet[sym] = newSymData['close']
                 if i < 1:
                     dfRet = newSymData.copy()
-#                     dfRet.set_index('date')
                 else:
                     dfRet = pd.merge(dfRet, newSymData, on='date')
 
@@ -213,4 +202,4 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
             self.data.to_csv('symbolsTransposed.csv')
         else:
-            super.load_data()
+            super(MeanVariancePortfolio, self).load_data()

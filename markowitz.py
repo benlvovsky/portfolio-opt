@@ -10,7 +10,7 @@ import meanvarianceportfolio as mvp
 sns.set()
 
 def main():
-    sharpeAndCml(source='upload')
+    sharpeAndCml(source='google')
 
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
@@ -31,10 +31,15 @@ def sharpeAndCml(source='google', symbols=['AAPL', 'GOOG', 'MSFT', 'FB']):
     retVal = '{\n'
     retVal += '"EfficientPortfolios":'
     retVal += effFrontier.toJson()
-    cpl = port.get_capital_market_line_bl(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
-# 
     retVal += ',\n'
-    retVal += '"CML":' + cpl.toJson()
+
+    try:
+        cpl = port.get_capital_market_line_bl(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
+        retVal += '"CML":' + cpl.toJson()
+    except Exception, e:
+        cpl = None
+        retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+
     retVal += "\n}"
 
     print retVal
