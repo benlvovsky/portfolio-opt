@@ -23,7 +23,7 @@ def efficientFrontier():
     if request.args.get('source') is None:
         source = 'google'
     if request.args.get('symbols') is None:
-        symbols = ['AAPL', 'GOOG', 'MSFT', 'FB']
+        symbols = mark.asxTop20 #['AAPL', 'GOOG', 'MSFT', 'FB']
     else:
         symbols = request.args.get('symbols').split(",")
 

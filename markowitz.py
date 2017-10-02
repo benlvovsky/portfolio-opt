@@ -9,6 +9,12 @@ import meanvarianceportfolio as mvp
 
 sns.set()
 
+asxTop20 = ['CBA.AX','WBC.AX','BHP.AX','ANZ.AX','NAB.AX','CSL.AX','WES.AX','TLS.AX','WOW.AX',\
+            'MQG.AX','RIO.AX','TCL.AX','WPL.AX','SCG.AX',\
+#             'SUN.AX',\
+            'WFD.AX','IAG.AX','AMP.AX','BXB.AX','QBE.AX']
+original = ['AAPL', 'GOOG', 'MSFT', 'FB']
+
 def main():
     sharpeAndCml(source='google')
 
@@ -20,7 +26,7 @@ def getEfficientFrontierPortfolios(port, evols):
     
     return portfolios
 
-def sharpeAndCml(source='google', symbols=['AAPL', 'GOOG', 'MSFT', 'FB']):
+def sharpeAndCml(source='google', symbols=original):
     ma = market_environment('ma', dt.date(2010, 1, 1))
     ma.add_list('symbols', symbols)
     ma.add_constant('source', source)
