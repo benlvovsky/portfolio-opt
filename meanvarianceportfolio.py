@@ -5,10 +5,11 @@ import scipy.optimize as sco
 import numpy as np
 import pandas as pd
 import datetime as dt
+import copy
 
 class CPL(object):
     def __init__(self, port, vol, ret, riskFree):
-        self.port = port
+        self.port = copy.deepcopy(port)
         self.vol = vol
         self.ret = ret
         self.riskFree = riskFree
@@ -123,14 +124,16 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         left, right = self.search_sign_changing(
             left_start, right_start, tangent, right_start - left_start)
         if left == 0 and right == 0:
+            print "error: left == 0 and right == 0"
             raise ValueError('Can not find tangent.')
+#             return CPL(self, x[0], y[0], riskless_asset) # temp fix
 
         zero_x = sco.brentq(tangent, left, right)
 
         opt_return = f_eff(zero_x)
         cpl = lambda x: f_eff_der(zero_x) * x + riskless_asset
-#         return cpl, zero_x, float(opt_return)
 
+        print "return CPL()"
         return CPL(self, zero_x, float(opt_return), riskless_asset)
 
     def get_efficient_frontier_bl(self, n):
@@ -197,7 +200,12 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
                 else:
                     dfRet = pd.merge(dfRet, newSymData, on='date')
 
-            self.data = dfRet.drop('date', axis = 1)
+            reversed = dfRet.set_index('date')
+#             reversed.to_csv('set_index_date.csv')
+            reversed = reversed.reindex(index=reversed.index[::-1])
+#             reversed.to_csv('set_index_date.csv')
+#             self.data = reversed.drop('date', axis = 1)
+            self.data = reversed
             self.data.columns = self.symbolsDf
 
             self.data.to_csv('symbolsTransposed.csv')

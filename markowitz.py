@@ -43,8 +43,9 @@ def sharpeAndCml(source='google', symbols=original):
         cpl = port.get_capital_market_line_bl(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
         retVal += '"CML":' + cpl.toJson()
     except Exception, e:
-        cpl = None
-        retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+        cpl = mvp.CPL(port, effFrontier.vols[0], effFrontier.rets[0], 0.05)
+#         retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+        retVal += '"CML":' + cpl.toJson()
 
     retVal += "\n}"
 

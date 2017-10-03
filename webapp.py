@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 
 @app.route('/health')
-def hello_world():
+def healthcheck():
     return '''
     {
     result: OK
@@ -16,12 +16,14 @@ def hello_world():
 
 @app.route('/ef')
 def efficientFrontier():
+#     return prettyJson(mark.sharpeAndCml('upload', []))
+
     print ('request source={}'.format(request.args.get('source')))
     print ('request symbols={}'.format(request.args.get('symbols')))
     source = request.args.get('source')
     symbols=request.args.get('symbols')
     if request.args.get('source') is None:
-        source = 'google'
+        source = 'yahoo'
     if request.args.get('symbols') is None:
         symbols = mark.asxTop20 #['AAPL', 'GOOG', 'MSFT', 'FB']
     else:
@@ -31,6 +33,7 @@ def efficientFrontier():
 
 @app.route('/upload', methods=['POST'])
 def uploadcsv():
+    print 'upload'
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
     
