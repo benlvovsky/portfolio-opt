@@ -21,19 +21,6 @@ RUN apt-get install -y \
 	python-dev \
 	zlib1g-dev
 
-#    postgresql-client-9.6 postgresql-contrib-9.6 \
-#    && apt-get autoremove \
-#    && apt-get clean
-
-#RUN apt-get install -y python-numpy
-#RUN apt-get install -y python-pandas
-#RUN apt-get install -y python-scipy
-#RUN apt-get install -y python-matplotlib
-#RUN apt-get install -y python-scikit-learn
-#COPY requirements.txt ./
-
-#RUN pip install --no-cache-dir -r requirements.txt
-
 RUN pip install 'scipy==0.13.3'
 RUN pip install 'seaborn==0.8'
 RUN pip install 'sqlparse==0.1.19'
@@ -110,6 +97,7 @@ RUN pip install 'pycrypto==2.6.1'
 #RUN pip install 'Pygments==2.2.0'
 
 RUN pip install 'matplotlib==1.3.1'
+RUN pip install sympy
 
 RUN mkdir -p /usr/src/app
 COPY . .

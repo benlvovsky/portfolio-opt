@@ -6,6 +6,8 @@ import seaborn as sns;
 import copy
 import settings as st
 import meanvarianceportfolio as mvp
+from scipy import interpolate
+import sympy
 
 sns.set()
 
@@ -26,6 +28,37 @@ def getEfficientFrontierPortfolios(port, evols):
     
     return portfolios
 
+
+def calcCPL(x, y, y_zero):
+    '''
+    Find an equation for the line that is tangent to the curve x^{3} - x at point (-1, 0)
+    Confirm your estimates of the coordinates of the second intersection point by solving the equations for the curve
+    and tangent simultaneously
+    '''
+    # interpolate the data with a spline
+    spl = interpolate.splrep(x,y)
+    y = x**3 - x
+      
+    # find the derivative of y
+    dy = sympy.diff(y, x)
+      
+    # find slope of the tangent line and equation
+    m = dy.subs(x, -1)
+    y1 = m*(x + 1)
+      
+    # draw the curve and line
+    plot(y, y1, (x, -5, 5), ylim=(-10, 10))
+      
+    # above line equation = the curve function, 2x + 2 = x**3 - x
+    rt = sympy.solve(x**3 - 3*x - 2, x)
+    print rt
+    # the roots are -1 and 2
+#     [-1, 2]
+      
+    # checking the roots better use boolean operation but visual inspection is simple
+    y1.subs(x, -1), y.subs(x, -1), y1.subs(x, 2), y.subs(x, 2)
+    # Output[105]: (0, 0, 6, 6)
+
 def sharpeAndCml(source='google', symbols=original):
     ma = market_environment('ma', dt.date(2010, 1, 1))
     ma.add_list('symbols', symbols)
@@ -40,8 +73,9 @@ def sharpeAndCml(source='google', symbols=original):
     retVal += ',\n'
 
     try:
+        cpl = calcCPL(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
         cpl = port.get_capital_market_line_bl(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
-        retVal += '"CML":' + cpl.toJson()
+#         retVal += '"CML":' + cpl.toJson()
     except Exception, e:
         cpl = mvp.CPL(port, effFrontier.vols[0], effFrontier.rets[0], 0.05)
 #         retVal += '"CML": {{"error":"{}"}}'.format(str(e))
