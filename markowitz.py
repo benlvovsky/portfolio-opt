@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import matplotlib
+matplotlib.use('qt4agg')
+import PyQt4
+import matplotlib.pyplot as plt
+
 import json
 from dx import *
 import seaborn as sns;
@@ -18,7 +23,7 @@ asxTop20 = ['CBA.AX','WBC.AX','BHP.AX','ANZ.AX','NAB.AX','CSL.AX','WES.AX','TLS.
 original = ['AAPL', 'GOOG', 'MSFT', 'FB']
 
 def main():
-    sharpeAndCml(source='google')
+    sharpeAndCml(source='upload')
 
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
@@ -73,13 +78,14 @@ def sharpeAndCml(source='google', symbols=original):
     retVal += ',\n'
 
     try:
-        cpl = calcCPL(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
-        cpl = port.get_capital_market_line_bl(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
+#         cpl = calcCPL(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
+        cpl = port.get_capital_market_line_bl_1(effFrontier.vols, effFrontier.rets, riskless_asset=0.05)
+        exit(0)
 #         retVal += '"CML":' + cpl.toJson()
     except Exception, e:
-        cpl = mvp.CPL(port, effFrontier.vols[0], effFrontier.rets[0], 0.05)
-#         retVal += '"CML": {{"error":"{}"}}'.format(str(e))
-        retVal += '"CML":' + cpl.toJson()
+#         cpl = mvp.CPL(port, effFrontier.vols[0], effFrontier.rets[0], 0.05)
+        retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+#         retVal += '"CML":' + cpl.toJson()
 
     retVal += "\n}"
 

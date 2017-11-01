@@ -1,3 +1,8 @@
+import matplotlib
+matplotlib.use('qt4agg')
+import PyQt4
+import matplotlib.pyplot as plt
+
 import dx
 import math
 import scipy
@@ -8,7 +13,7 @@ import pandas as pd
 import datetime as dt
 import copy
 
-from pylab import plot,show
+# from pylab import plot,show
 
 class CPL(object):
     def __init__(self, port, vol, ret, riskFree):
@@ -101,7 +106,10 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
     def draw_tangent(self, x,y,a):
         # interpolate the data with a spline
         spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
-        small_t = scipy.arange(a-5,a+5)
+#    bl: original        small_t = scipy.arange(a-5,a+5)
+        small_t = scipy.arange(a*0.8, a*1.4, 0.01)
+        print small_t
+#         exit(0)
         
         # bl Evaluate a B-spline (derivative = 0) for x point 'a'
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
@@ -111,14 +119,16 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tan = fa+fprime*(small_t-a) # tangent
-        plot(a,fa,'om',small_t,tan,'--r')
+        plt.plot(a,fa,'om',small_t,tan,'--r')
 
     def get_capital_market_line_bl_1(self, x, y, riskless_asset):
-        self.draw_tangent(x,y,x[10])
-        self.draw_tangent(x,y,x[20])
-        
-        plot(x, y, alpha=0.5)
-        show()
+        print 'len(x)={}'.format(len(x))
+        self.draw_tangent(x,y,x[len(x)/2])
+        self.draw_tangent(x,y,x[len(x)/3])
+         
+        plt.plot(x, y, alpha=0.5)
+        plt.show()
+        exit(0)
 
     def get_capital_market_line_bl(self, x, y, riskless_asset):
         '''
