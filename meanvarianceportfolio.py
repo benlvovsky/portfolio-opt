@@ -1,11 +1,14 @@
 import dx
 import math
+import scipy
 import scipy.interpolate as sci
 import scipy.optimize as sco
 import numpy as np
 import pandas as pd
 import datetime as dt
 import copy
+
+from pylab import plot,show
 
 class CPL(object):
     def __init__(self, port, vol, ret, riskFree):
@@ -95,6 +98,28 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
     
         return s
     
+    def draw_tangent(self, x,y,a):
+        # interpolate the data with a spline
+        spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
+        small_t = scipy.arange(a-5,a+5)
+        
+        # bl Evaluate a B-spline (derivative = 0) for x point 'a'
+        # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
+        fa = sci.splev(a,spl,der=0)     # f(a)
+        
+         # bl Evaluate a 1st derivative of B-spline (tangent)
+        # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
+        fprime = sci.splev(a,spl,der=1) # f'(a)
+        tan = fa+fprime*(small_t-a) # tangent
+        plot(a,fa,'om',small_t,tan,'--r')
+
+    def get_capital_market_line_bl_1(self, x, y, riskless_asset):
+        self.draw_tangent(x,y,x[10])
+        self.draw_tangent(x,y,x[20])
+        
+        plot(x, y, alpha=0.5)
+        show()
+
     def get_capital_market_line_bl(self, x, y, riskless_asset):
         '''
         Returns the capital market line as a lambda function and
@@ -122,11 +147,12 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         left_start = x[0]
         right_start = x[-1]
 
-        left, right = self.search_sign_changing(
+        left, right = self.search_sign_changing_bl(
             left_start, right_start, tangent, right_start - left_start)
         if left == 0 and right == 0:
-            print "error: left == 0 and right == 0"
-            raise ValueError('Can not find tangent.')
+            sErr = "error: Can not find tangent. left == 0 and right == 0"
+            print sErr
+            raise ValueError(sErr)
 #             return CPL(self, x[0], y[0], riskless_asset) # temp fix
 
         zero_x = sco.brentq(tangent, left, right)
@@ -136,6 +162,19 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
         print "return CPL()"
         return CPL(self, zero_x, float(opt_return), riskless_asset)
+
+    def search_sign_changing_bl(self, l, r, f, d):
+        print 'search_sign_changing_bl: left={}, right={}, d={}'.format(l, r, d)
+        if d < 0.000001:
+# orig            return (0, 0)
+            return (l, r) # bl: if [d] is too small - return what we got so far
+        for x in np.arange(l, r + d, d):
+            if f(l) * f(x) < 0:
+                ret = (x - d, x)
+                return ret
+
+        ret = self.search_sign_changing_bl(l, r, f, d / 2.)
+        return ret
 
     def get_efficient_frontier_bl(self, n):
         '''
