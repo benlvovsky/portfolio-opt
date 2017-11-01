@@ -100,16 +100,22 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
     
     def draw_tangent(self, x,y,a):
         # interpolate the data with a spline
-        spl = sci.splrep(x,y)
+        spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
         small_t = scipy.arange(a-5,a+5)
+        
+        # bl Evaluate a B-spline (derivative = 0) for x point 'a'
+        # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
         fa = sci.splev(a,spl,der=0)     # f(a)
+        
+         # bl Evaluate a 1st derivative of B-spline (tangent)
+        # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tan = fa+fprime*(small_t-a) # tangent
         plot(a,fa,'om',small_t,tan,'--r')
 
     def get_capital_market_line_bl_1(self, x, y, riskless_asset):
-        self.draw_tangent(x,y,10)
-        self.draw_tangent(x,y,20)
+        self.draw_tangent(x,y,x[10])
+        self.draw_tangent(x,y,x[20])
         
         plot(x, y, alpha=0.5)
         show()
