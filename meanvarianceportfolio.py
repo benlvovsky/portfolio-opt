@@ -113,6 +113,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         if len(x) == 1:
             raise ValueError('Efficient Frontier seems to be constant.')
         f_eff = sci.UnivariateSpline(x, y, s=0)
+# bl        f_eff = sci.InterpolatedUnivariateSpline(x, y)
         f_eff_der = f_eff.derivative(1)
 
         def tangent(x, rl=riskless_asset):
