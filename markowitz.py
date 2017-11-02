@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import matplotlib
-matplotlib.use('qt4agg')
-import PyQt4
+matplotlib.use('Agg')
+#matplotlib.use('qt5agg')
+#matplotlib.use('qt4agg')
+#import PyQt4
 import matplotlib.pyplot as plt
 
 import json
