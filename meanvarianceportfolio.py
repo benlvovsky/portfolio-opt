@@ -124,7 +124,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         print 'segment y array: {}'.format(tan)
         plt.plot(a,fa,'om',small_t,tan, lineType)
 
-    def calcYforZeroXOfTangent(self, spl, x, y, a):
+    def calcYforZeroXOfTangent(self, spl, a):
         # bl Evaluate a B-spline (derivative = 0) for x point 'a'
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
         fa = sci.splev(a,spl,der=0)     # f(a)
@@ -133,15 +133,15 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         small_t = scipy.arange(0, a*1.2, 0.01)
 
         fprime = sci.splev(a,spl,der=1) # f'(a)
-        tan = fa+fprime*(small_t-a) # tangent
-        print 'zero X tangent segment y array: {}'.format(tan)
-        return tan[0]
+        tanYArr = fa+fprime*(small_t-a) # tangent y coords array
+        print 'zero X tangent segment y array: {}'.format(tanYArr)
+        return tanYArr[0]
 
     def findXForOptimalTangent(self, x,y, risklessY):
         spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
         prevTangentY = -1
         for i in range(1, len(x)-1):
-            tangentY = self.calcYforZeroXOfTangent(spl, x, y, x[i])
+            tangentY = self.calcYforZeroXOfTangent(spl, x[i])
             if tangentY >= risklessY:
                 print 'tangentY Found {} at x[{}]={}, len(x) = {}, previous Y={}'.format(tangentY, i, x[i], len(x), prevTangentY)
                 return x[i], tangentY
