@@ -117,7 +117,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
         fa = sci.splev(a,spl,der=0)     # f(a)
         
-         # bl Evaluate a 1st derivative of B-spline (tangent)
+        # bl Evaluate a 1st derivative of B-spline (tangent)
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tan = fa+fprime*(small_t-a) # tangent y array (x: small_t)
