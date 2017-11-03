@@ -1,6 +1,7 @@
 import matplotlib
-matplotlib.use('qt4agg')
-import PyQt4
+#matplotlib.use('qt4agg')
+#matplotlib.use('qt5agg')
+#import PyQt5
 import matplotlib.pyplot as plt
 
 import dx
@@ -103,31 +104,63 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
     
         return s
     
-    def draw_tangent(self, x,y,a):
+    def draw_tangent(self, x,y,a, lineType="--b"):
         # interpolate the data with a spline
         spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
 #    bl: original        small_t = scipy.arange(a-5,a+5)
-        small_t = scipy.arange(a*0.8, a*1.4, 0.01)
-        print small_t
+#         small_t = scipy.arange(x[0], a*1.2, 0.01)
+        small_t = scipy.arange(0, a*1.2, 0.01)
+        print 'segment x array: {}'.format(small_t) 
 #         exit(0)
         
         # bl Evaluate a B-spline (derivative = 0) for x point 'a'
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
         fa = sci.splev(a,spl,der=0)     # f(a)
         
-         # bl Evaluate a 1st derivative of B-spline (tangent)
+        # bl Evaluate a 1st derivative of B-spline (tangent)
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
         fprime = sci.splev(a,spl,der=1) # f'(a)
-        tan = fa+fprime*(small_t-a) # tangent
-        plt.plot(a,fa,'om',small_t,tan,'--r')
+        tan = fa+fprime*(small_t-a) # tangent y array (x: small_t)
+        print 'segment y array: {}'.format(tan)
+        plt.plot(a,fa,'om',small_t,tan, lineType)
+
+    def calcYforZeroXOfTangent(self, spl, a):
+        # bl Evaluate a B-spline (derivative = 0) for x point 'a'
+        # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
+        fa = sci.splev(a,spl,der=0)     # f(a)
+        # bl Evaluate a 1st derivative of B-spline (tangent)
+        # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
+        small_t = scipy.arange(0, a*1.2, 0.01)
+
+        fprime = sci.splev(a,spl,der=1) # f'(a)
+        tanYArr = fa+fprime*(small_t-a) # tangent y coords array
+        print 'zero X tangent segment y array: {}'.format(tanYArr)
+        return tanYArr[0]
+
+    def findXForOptimalTangent(self, x,y, risklessY):
+        spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
+        prevTangentY = -1
+        for i in range(1, len(x)-1):
+            tangentY = self.calcYforZeroXOfTangent(spl, x[i])
+            if tangentY >= risklessY:
+                print 'tangentY Found {} at x[{}]={}, len(x) = {}, previous Y={}'.format(tangentY, i, x[i], len(x), prevTangentY)
+                return x[i], tangentY
+            else:
+                prevTangentY = tangentY
+
+        print 'tangentY Not found'
+        return x[1], 0
 
     def get_capital_market_line_bl_1(self, x, y, riskless_asset):
         print 'len(x)={}'.format(len(x))
-        self.draw_tangent(x,y,x[len(x)/2])
-        self.draw_tangent(x,y,x[len(x)/3])
-         
+        (xOpt, yOpt) = self.findXForOptimalTangent(x, y, riskless_asset)
+
+        self.draw_tangent(x, y, xOpt, lineType="--g")
         plt.plot(x, y, alpha=0.5)
-        plt.show()
+        plt.plot(0, riskless_asset,'om')
+        plt.plot(0, yOpt,'og')
+#         plt.show()
+        plt.savefig("efffrontier.png")
         exit(0)
 
     def get_capital_market_line_bl(self, x, y, riskless_asset):
