@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import copy
+from sympy.physics.quantum.cartesian import YOp
 
 # from pylab import plot,show
 
@@ -110,7 +111,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 #    bl: original        small_t = scipy.arange(a-5,a+5)
 #         small_t = scipy.arange(x[0], a*1.2, 0.01)
         small_t = scipy.arange(0, a*1.2, 0.01)
-        print 'segment x array: {}'.format(small_t) 
+#         print 'segment x array: {}'.format(small_t)
 #         exit(0)
         
         # bl Evaluate a B-spline (derivative = 0) for x point 'a'
@@ -121,7 +122,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tan = fa+fprime*(small_t-a) # tangent y array (x: small_t)
-        print 'segment y array: {}'.format(tan)
+#         print 'segment y array: {}'.format(tan)
         plt.plot(a,fa,'om',small_t,tan, lineType)
 
     def calcYforZeroXOfTangent(self, spl, a):
@@ -134,34 +135,46 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tanYArr = fa+fprime*(small_t-a) # tangent y coords array
-        print 'zero X tangent segment y array: {}'.format(tanYArr)
+#         print 'zero X tangent segment y array: {}'.format(tanYArr)
         return tanYArr[0]
 
-    def findXForOptimalTangent(self, x,y, risklessY):
-        spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
+    def findXForOptimalTangent(self, xSegment, spl, risklessY):
         prevTangentY = -1
-        for i in range(1, len(x)-1):
-            tangentY = self.calcYforZeroXOfTangent(spl, x[i])
-            if tangentY >= risklessY:
-                print 'tangentY Found {} at x[{}]={}, len(x) = {}, previous Y={}'.format(tangentY, i, x[i], len(x), prevTangentY)
-                return x[i], tangentY
+        for i in range(1, len(xSegment)-1):
+            tangentY = self.calcYforZeroXOfTangent(spl, xSegment[i])
+            if tangentY > risklessY:
+                print 'tangentY Found {} at xSegment[{}]={}, len(xSegment) = {}, previous prevTangentY={}'\
+                    .format(tangentY, i, xSegment[i], len(xSegment), prevTangentY)
+                return xSegment[i], tangentY, i
             else:
                 prevTangentY = tangentY
 
         print 'tangentY Not found'
-        return x[1], 0
+        return xSegment[1], prevTangentY, 1
 
     def get_capital_market_line_bl_1(self, x, y, riskless_asset):
         print 'len(x)={}'.format(len(x))
-        (xOpt, yOpt) = self.findXForOptimalTangent(x, y, riskless_asset)
+        spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
+
+        (xOpt, yOnZeroX, idx) = self.findXForOptimalTangent(x, spl, riskless_asset)
+        fineGrainedXArr = scipy.arange(x[idx-1], x[idx], (x[idx] - x[idx - 1]) / 20)
+        (xOpt, yOnZeroX, idx) = self.findXForOptimalTangent(fineGrainedXArr, spl, riskless_asset)
+        fineGrainedXArr = scipy.arange(fineGrainedXArr[idx-1], fineGrainedXArr[idx], (fineGrainedXArr[idx] - fineGrainedXArr[idx - 1]) / 20)
+        (xOpt, yOnZeroX, idx) = self.findXForOptimalTangent(fineGrainedXArr, spl, riskless_asset)
 
         self.draw_tangent(x, y, xOpt, lineType="--g")
         plt.plot(x, y, alpha=0.5)
-        plt.plot(0, riskless_asset,'om')
-        plt.plot(0, yOpt,'og')
+        plt.plot(0, riskless_asset, 'om')
+        plt.plot(0, yOnZeroX,'og')
 #         plt.show()
+        yOpt = sci.splev(xOpt, spl, der=0)     # f(a)
+        plt.plot(xOpt, yOpt, 'b^')
         plt.savefig("efffrontier.png")
-        exit(0)
+
+        weights = self.get_optimal_weights('Return', constraint=xOpt)
+#TODO: incorporate weights        return CPL(weights, xOpt, yOnZeroX, riskless_asset)
+        return CPL(self, xOpt, yOpt, riskless_asset)
+#         exit(0)
 
     def get_capital_market_line_bl(self, x, y, riskless_asset):
         '''
