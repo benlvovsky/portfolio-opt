@@ -4,3 +4,4 @@ common:
   upload_directory: './upload'
 efficient_frontier:
   points_number: 30
+  default_riskfree: 0.04

@@ -16,8 +16,6 @@ def healthcheck():
 
 @app.route('/ef')
 def efficientFrontier():
-#     return prettyJson(mark.sharpeAndCml('upload', []))
-
     print ('request source={}'.format(request.args.get('source')))
     print ('request symbols={}'.format(request.args.get('symbols')))
     source = request.args.get('source')
@@ -29,18 +27,27 @@ def efficientFrontier():
     else:
         symbols = request.args.get('symbols').split(",")
 
-    return prettyJson(mark.sharpeAndCml(source = source, symbols = symbols))
+    return prettyJson(mark.sharpeAndCml(source, findRiskFree(), symbols))
 
 @app.route('/upload', methods=['POST'])
 def uploadcsv():
     print 'upload'
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
-    
+
     if not os.path.exists(uploadDir):
         os.makedirs(uploadDir)
     f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
-    return prettyJson(mark.sharpeAndCml('upload', []))
+
+    return prettyJson(mark.sharpeAndCml('upload', findRiskFree(), []))
+
+def findRiskFree():
+    riskFree = request.args.get('riskfree')
+    print ('request riskfree={}'.format(riskFree))
+    if request.args.get('riskfree') is None:
+        riskFree = st.config["efficient_frontier"]["default_riskfree"]
+
+    return float(riskFree)
 
 def prettyJson(notPretty):
     parsed = json.loads(notPretty)
