@@ -1,0 +1,7 @@
+sudo apt-get install kubectl
+kubectl get deploy
+kubectl scale --replicas=0 deploy/frontend
+kubectl get deploy
+kubectl scale --replicas=1 deploy/frontend
+kubectl get deploy
+
