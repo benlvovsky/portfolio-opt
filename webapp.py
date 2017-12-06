@@ -42,10 +42,13 @@ def uploadcsv():
     return prettyJson(mark.sharpeAndCml('upload', findRiskFree(), []))
 
 def findRiskFree():
-    riskFree = request.args.get('riskfree')
+    riskFree = request.form.get('riskfree')
     print ('request riskfree={}'.format(riskFree))
-    if request.args.get('riskfree') is None:
+    if riskFree is None:
         riskFree = st.config["efficient_frontier"]["default_riskfree"]
+        print 'No riskfree provided in request arguments => take a default value of {}'.format(riskFree)
+    else:
+        print 'Using provided riskfree = {}'.format(riskFree)
 
     return float(riskFree)
 
