@@ -109,3 +109,5 @@ ENV/
 .idea/
 
 *.iml
+.project
+.settings/

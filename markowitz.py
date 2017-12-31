@@ -41,19 +41,24 @@ def sharpeAndCml(source, riskFree, symbols):
     ma.add_list('symbols', symbols)
     ma.add_constant('source', source)
     ma.add_constant('final date', dt.date(2014, 3, 1))
-    port = mvp.MeanVariancePortfolio(source + '_stocks', ma)
-    effFrontier = port.get_efficient_frontier_bl(st.config["efficient_frontier"]["points_number"])
-    
+
     retVal = '{\n'
     retVal += '"EfficientPortfolios":'
-    retVal += effFrontier.toJson()
-    retVal += ',\n'
-
     try:
-        cpl = port.get_capital_market_line_bl_1(effFrontier.vols, effFrontier.rets, riskless_asset=riskFree)
-        retVal += '"CML":' + cpl.toJson()
+        port = mvp.MeanVariancePortfolio(source + '_stocks', ma)
+        effFrontier = port.get_efficient_frontier_bl(st.config["efficient_frontier"]["points_number"])
+
+        retVal += effFrontier.toJson()
+        retVal += ',\n'
+
+        try:
+            cpl = port.get_capital_market_line_bl_1(effFrontier.vols, effFrontier.rets, riskless_asset=riskFree)
+            retVal += '"CML":' + cpl.toJson()
+        except Exception, e:
+            retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+
     except Exception, e:
-        retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+        retVal += '{{"error":"{}"}}'.format(str(e))
 
     retVal += "\n}"
 

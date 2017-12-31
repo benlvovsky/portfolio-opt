@@ -76,7 +76,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
                              sep=';', parse_dates=['date'])
             self.symbolsDf = self.dfUploadData.drop_duplicates(['symbol'])['symbol'].values
             self.mar_env.add_list('symbols', self.symbolsDf)
-            self.mar_env.add_constant('final date', dt.date(2014, 3, 1)) # Not used fro upload
+            self.mar_env.add_constant('final date', dt.date(2014, 3, 1)) # ust arbitraty constant as it is not used for upload
 
     def __init__(self, name, mar_env):
         self.mar_env = mar_env

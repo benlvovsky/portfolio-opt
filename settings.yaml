@@ -5,3 +5,5 @@ common:
 efficient_frontier:
   points_number: 30
   default_riskfree: 0.04
+  default_datasource: 'yahoo'
+  override_datasource: true
