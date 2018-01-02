@@ -4,3 +4,5 @@
 `docker build --no-cache -t img_markowitz .`
 ##to run container iteractive into bash
 `docker run -it img_markowitz:latest bash`
+##access to bash on running markowitz-cont container:
+`docker exec -it markowitz-cont bash`

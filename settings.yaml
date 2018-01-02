@@ -2,6 +2,7 @@ common:
   PGHOST: 'postgres-cont'
   upload_file_name: 'data.csv'
   upload_directory: './upload'
+  upload_type: 'allcolumns'
 efficient_frontier:
   points_number: 30
   default_riskfree: 0.04

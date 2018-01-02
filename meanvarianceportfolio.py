@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import copy
+import settings as st
 from sympy.physics.quantum.cartesian import YOp
 
 # from pylab import plot,show
@@ -70,13 +71,23 @@ class EfficientFrontier(object):
 class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
     def preInit(self):
-        if self.mar_env.get_constant('source') == 'upload':
+        if self.mar_env.get_constant('source') == 'upload' and st.config["common"]["upload_type"] != 'allcolumns':
             self.dfUploadData = pd.DataFrame()
             self.dfUploadData = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
                              sep=';', parse_dates=['date'])
             self.symbolsDf = self.dfUploadData.drop_duplicates(['symbol'])['symbol'].values
             self.mar_env.add_list('symbols', self.symbolsDf)
-            self.mar_env.add_constant('final date', dt.date(2014, 3, 1)) # ust arbitraty constant as it is not used for upload
+            self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
+        elif self.mar_env.get_constant('source') == 'upload' and st.config["common"]["upload_type"] == 'allcolumns':
+            print 'upload and st.config["common"]["upload_type"] = allcolumns'
+            self.dfUploadData = pd.read_csv('upload/dataAllColumns.csv',parse_dates=['date'])
+            print self.dfUploadData.columns.values[1:]
+            self.symbolsDf = self.dfUploadData.columns.values[1:]
+            self.mar_env.add_list('symbols', self.symbolsDf)
+            print 'dt.datetime.now()...'
+            print 'dt.datetime.now()={}'.format(dt.datetime.now())
+            self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
+            print '...done'
 
     def __init__(self, name, mar_env):
         self.mar_env = mar_env
@@ -286,7 +297,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         Overridden loads csv if was uploaded or calls super implementation
         '''
 
-        if self.source == 'upload':
+        if self.source == 'upload' and st.config["common"]["upload_type"] != 'allcolumns':
             dfRet = pd.DataFrame()
             for i, sym in enumerate(self.symbolsDf):
                 newSymData = self.dfUploadData.loc[self.dfUploadData['symbol'] == sym][['date', 'close']]
@@ -305,5 +316,12 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             self.data.columns = self.symbolsDf
 
             self.data.to_csv('symbolsTransposed.csv')
+        elif self.source == 'upload' and st.config["common"]["upload_type"] == 'allcolumns':
+            self.dfUploadData = self.dfUploadData.set_index('date')
+            self.data = self.dfUploadData
+            print 'self.data.columns = {}'.format(self.data.columns)
+            print 'self.symbolsDf = {}'.format(self.symbolsDf)
+            self.data.columns = self.symbolsDf
+            self.data.to_csv('test.csv')
         else:
             super(MeanVariancePortfolio, self).load_data()
