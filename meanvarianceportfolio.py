@@ -316,7 +316,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             self.data.columns = self.symbolsDf
 
             self.data.to_csv('symbolsTransposed.csv')
-        elif self.source == 'upload' and st.config["common"]["upload_type"] == 'allcolumns':
+        elif self.source == 'upload1' or (self.source == 'upload' and st.config["common"]["upload_type"] == 'allcolumns'):
             self.dfUploadData = self.dfUploadData.set_index('date')
             self.data = self.dfUploadData
             print 'self.data.columns = {}'.format(self.data.columns)

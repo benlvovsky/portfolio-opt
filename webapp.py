@@ -72,3 +72,6 @@ def determineRiskFree(riskFree):
 def prettyJson(notPretty):
     parsed = json.loads(notPretty)
     return json.dumps(parsed, indent=4, sort_keys=True)
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', threaded=True)
