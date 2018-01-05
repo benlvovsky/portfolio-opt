@@ -29,6 +29,7 @@ class CPL(object):
     def toJson(self):
         s = '{"OptimalPorfolio":\n{'
         s += '"opt_vol":{:},\n"opt_ret":{:}\n,"riskfree_ret":{:}\n,'.format(self.vol, self.ret, self.riskFree)
+        # self.port.sortByWeight()
         s += '"OP":' + self.port.toJson()
         s += '\n}\n}'
         return s
@@ -79,13 +80,13 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             self.mar_env.add_list('symbols', self.symbolsDf)
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
         elif self.mar_env.get_constant('source') == 'upload' and st.config["common"]["upload_type"] == 'allcolumns':
-            print 'upload and st.config["common"]["upload_type"] = allcolumns'
-            self.dfUploadData = pd.read_csv('upload/dataAllColumns.csv',parse_dates=['date'])
+            print 'upload_type == allcolumns'
+            fileName = '{}/{}'.format(st.config["common"]["upload_directory"], st.config["common"]["upload_file_name"])
+            print 'Upload fileName ' + fileName
+            self.dfUploadData = pd.read_csv(fileName, parse_dates=['date'])
             print self.dfUploadData.columns.values[1:]
             self.symbolsDf = self.dfUploadData.columns.values[1:]
             self.mar_env.add_list('symbols', self.symbolsDf)
-            print 'dt.datetime.now()...'
-            print 'dt.datetime.now()={}'.format(dt.datetime.now())
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
             print '...done'
 
@@ -102,12 +103,12 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         s += '"sharpe":%10.3f,\n' % (self.portfolio_return /
                                              math.sqrt(self.variance))
         s += '"weights":[\n'
-    #         s += 'symbol | weight | ret. con. \n'
         for i in range(len(self.symbols)):
             s += '{\n'
             s += '"symbol":"{:}"'.format(self.symbols[i]) + ",\n"
             s += '"weight":{:6.3f}'.format(self.weights[i]) + ",\n"
-            s += '"mean_return":{:9.3f}'.format(self.mean_returns[i]) + "\n"
+            # s += '"mean_return":"{:9.3f}"'.format(self.mean_returns[i]) + "\n"
+            s += '"mean_return":"{:f}"'.format(self.mean_returns[i]) + "\n"
             s += '}\n'
             if i < len(self.symbols) - 1:
                 s += ','
@@ -325,3 +326,13 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             self.data.to_csv('test.csv')
         else:
             super(MeanVariancePortfolio, self).load_data()
+
+    def sortByWeight(self):
+        df = pd.DataFrame()
+        df['s'] = self.symbols
+        df['w'] = self.weights
+        df['m'] = self.mean_returns
+        df.sort_values(by = 'w', ascending=False, inplace=True)
+        self.symbols      = df['s']
+        self.weights      = df['w']
+        self.mean_returns = df['m']

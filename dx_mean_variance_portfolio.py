@@ -30,7 +30,7 @@ def portToJson(port):
         string += '{\n'
         string += '"symbol":"{:}"'.format(port.symbols[i]) + ",\n"
         string += '"weight":{:6.3f}'.format(port.weights[i]) + ",\n"
-        string += '"mean_return":{:9.3f}'.format(port.mean_returns[i]) + "\n"
+        string += '"mean_return":"{:9.3f}"'.format(port.mean_returns[i]) + "\n"
         string += '}\n'
         if i < len(port.symbols) - 1:
             string += ','

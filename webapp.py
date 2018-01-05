@@ -48,7 +48,24 @@ def efficientFrontier():
 
 @app.route('/upload', methods=['POST'])
 def uploadcsv():
-    print 'upload'
+    return uploadcsvGeneric('upload')
+
+    # print 'upload'
+    # f = request.files['the_file']
+    # uploadDir = st.config["common"]["upload_directory"]
+    #
+    # if not os.path.exists(uploadDir):
+    #     os.makedirs(uploadDir)
+    # f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
+    #
+    # return prettyJson(mark.sharpeAndCml('upload', determineRiskFree(request.form.get('riskfree')), []))
+
+@app.route('/upload1', methods=['POST'])
+def uploadcsv1():
+    return uploadcsvGeneric('upload1')
+
+def uploadcsvGeneric(sourceName):
+    print 'Endpoint name called:' + sourceName
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
 
@@ -56,7 +73,7 @@ def uploadcsv():
         os.makedirs(uploadDir)
     f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
 
-    return prettyJson(mark.sharpeAndCml('upload', determineRiskFree(request.form.get('riskfree')), []))
+    return prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(request.form.get('riskfree')), []))
 
 def determineRiskFree(riskFree):
     # riskFree = request.form.get('riskfree')
@@ -70,8 +87,17 @@ def determineRiskFree(riskFree):
     return float(riskFree)
 
 def prettyJson(notPretty):
+    outDir = 'output'
+    notPretty = notPretty.replace('\r\n', '')
+    with open(outDir + '/lastjson_notpretty.js', 'w') as outfile:
+        outfile.write(notPretty)
     parsed = json.loads(notPretty)
-    return json.dumps(parsed, indent=4, sort_keys=True)
+    jsStr = json.dumps(parsed, indent=4, sort_keys=True)
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+    with open(outDir + '/lastjsonresponse.js', 'w') as outfile:
+        outfile.write(jsStr)
+    return jsStr
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', threaded=True)
