@@ -29,7 +29,7 @@ class CPL(object):
     def toJson(self):
         s = '{"OptimalPorfolio":\n{'
         s += '"opt_vol":{:},\n"opt_ret":{:}\n,"riskfree_ret":{:}\n,'.format(self.vol, self.ret, self.riskFree)
-        # self.port.sortByWeight()
+        self.port.sortByWeight()
         s += '"OP":' + self.port.toJson()
         s += '\n}\n}'
         return s
@@ -328,11 +328,17 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             super(MeanVariancePortfolio, self).load_data()
 
     def sortByWeight(self):
+        np.savetxt("output/self_mean_returns.csv", self.mean_returns, delimiter=",")
         df = pd.DataFrame()
         df['s'] = self.symbols
         df['w'] = self.weights
-        df['m'] = self.mean_returns
+        df['m'] = np.array(self.mean_returns)
+        df.to_csv('output/df_m.csv')
+        df.to_csv('output/df_before_sort.csv')
         df.sort_values(by = 'w', ascending=False, inplace=True)
-        self.symbols      = df['s']
-        self.weights      = df['w']
-        self.mean_returns = df['m']
+        self.symbols      = df['s'].values
+        self.weights      = df['w'].values
+        self.mean_returns = df['m'].astype('float64').values
+        df.to_csv('output/df_after_sort.csv')
+        # a = np.asarray([ self.symbols, self.weights, self.mean_returns ])
+        # np.savetxt("output/self_s_w_m.csv", a, delimiter=",")
