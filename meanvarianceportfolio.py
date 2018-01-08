@@ -72,25 +72,29 @@ class EfficientFrontier(object):
 class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
     def preInit(self):
-        if self.mar_env.get_constant('source') == 'upload' and st.config["common"]["upload_type"] != 'allcolumns':
+        if self.mar_env.get_constant('source') == 'upload' and uploadType != 'allcolumns':
             self.dfUploadData = pd.DataFrame()
             self.dfUploadData = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
                              sep=';', parse_dates=['date'])
             self.symbolsDf = self.dfUploadData.drop_duplicates(['symbol'])['symbol'].values
             self.mar_env.add_list('symbols', self.symbolsDf)
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
-        elif self.mar_env.get_constant('source') == 'upload' and st.config["common"]["upload_type"] == 'allcolumns':
-            print 'upload_type == allcolumns'
+        elif self.mar_env.get_constant('source') == 'upload' and uploadType == 'allcolumns':
             fileName = '{}/{}'.format(st.config["common"]["upload_directory"], st.config["common"]["upload_file_name"])
-            print 'Upload fileName ' + fileName
             self.dfUploadData = pd.read_csv(fileName, parse_dates=['date'])
             print self.dfUploadData.columns.values[1:]
             self.symbolsDf = self.dfUploadData.columns.values[1:]
             self.mar_env.add_list('symbols', self.symbolsDf)
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
-            print '...done'
 
     def __init__(self, name, mar_env):
+        if 'upload_type' in st.config["common"]:
+            self.uploadType = st.config["common"]["upload_type"]
+        else:
+            self.uploadType = ''
+
+        print 'upload_type = {}'.format(self.uploadType)
+
         self.mar_env = mar_env
         self.preInit()
         super(MeanVariancePortfolio, self).__init__(name, self.mar_env)
@@ -298,7 +302,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         Overridden loads csv if was uploaded or calls super implementation
         '''
 
-        if self.source == 'upload' and st.config["common"]["upload_type"] != 'allcolumns':
+        if self.source == 'upload' and self.uploadType != 'allcolumns':
             dfRet = pd.DataFrame()
             for i, sym in enumerate(self.symbolsDf):
                 newSymData = self.dfUploadData.loc[self.dfUploadData['symbol'] == sym][['date', 'close']]
@@ -317,7 +321,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             self.data.columns = self.symbolsDf
 
             self.data.to_csv('symbolsTransposed.csv')
-        elif self.source == 'upload1' or (self.source == 'upload' and st.config["common"]["upload_type"] == 'allcolumns'):
+        elif self.source == 'upload1' or (self.source == 'upload' and self.uploadType == 'allcolumns'):
             self.dfUploadData = self.dfUploadData.set_index('date')
             self.data = self.dfUploadData
             print 'self.data.columns = {}'.format(self.data.columns)
