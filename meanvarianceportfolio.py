@@ -72,14 +72,14 @@ class EfficientFrontier(object):
 class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
     def preInit(self):
-        if self.mar_env.get_constant('source') == 'upload' and uploadType != 'allcolumns':
+        if self.mar_env.get_constant('source') == 'upload':
             self.dfUploadData = pd.DataFrame()
-            self.dfUploadData = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'], 
-                             sep=';', parse_dates=['date'])
+            self.dfUploadData = pd.read_csv('upload/data.csv', header=None, names = ['symbol', 'date', 'close', 'open', 'high', 'low', 'volume'],
+                                            sep=';', parse_dates=['date'])
             self.symbolsDf = self.dfUploadData.drop_duplicates(['symbol'])['symbol'].values
             self.mar_env.add_list('symbols', self.symbolsDf)
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
-        elif self.mar_env.get_constant('source') == 'upload' and uploadType == 'allcolumns':
+        elif self.mar_env.get_constant('source') == 'upload1':
             fileName = '{}/{}'.format(st.config["common"]["upload_directory"], st.config["common"]["upload_file_name"])
             self.dfUploadData = pd.read_csv(fileName, parse_dates=['date'])
             print self.dfUploadData.columns.values[1:]
@@ -88,13 +88,6 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
 
     def __init__(self, name, mar_env):
-        if 'upload_type' in st.config["common"]:
-            self.uploadType = st.config["common"]["upload_type"]
-        else:
-            self.uploadType = ''
-
-        print 'upload_type = {}'.format(self.uploadType)
-
         self.mar_env = mar_env
         self.preInit()
         super(MeanVariancePortfolio, self).__init__(name, self.mar_env)
@@ -105,7 +98,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         s += '"return":%10.3f,\n' % self.portfolio_return
         s += '"volatility":%10.3f,\n' % math.sqrt(self.variance)
         s += '"sharpe":%10.3f,\n' % (self.portfolio_return /
-                                             math.sqrt(self.variance))
+                                     math.sqrt(self.variance))
         s += '"weights":[\n'
         for i in range(len(self.symbols)):
             s += '{\n'
@@ -116,29 +109,29 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             s += '}\n'
             if i < len(self.symbols) - 1:
                 s += ','
-    
+
         s += ']\n}\n}\n'
-    
+
         return s
-    
+
     def draw_tangent(self, x,y,a, lineType="--b"):
         # interpolate the data with a spline
         spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
-#    bl: original        small_t = scipy.arange(a-5,a+5)
-#         small_t = scipy.arange(x[0], a*1.2, 0.01)
+        #    bl: original        small_t = scipy.arange(a-5,a+5)
+        #         small_t = scipy.arange(x[0], a*1.2, 0.01)
         small_t = scipy.arange(0, a*1.2, 0.01)
-#         print 'segment x array: {}'.format(small_t)
-#         exit(0)
-        
+        #         print 'segment x array: {}'.format(small_t)
+        #         exit(0)
+
         # bl Evaluate a B-spline (derivative = 0) for x point 'a'
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a'
         fa = sci.splev(a,spl,der=0)     # f(a)
-        
+
         # bl Evaluate a 1st derivative of B-spline (tangent)
         # return the value (y coordinate) of the smoothed spline at x coordinate 'a' of derivative 1 (tangent)
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tan = fa+fprime*(small_t-a) # tangent y array (x: small_t)
-#         print 'segment y array: {}'.format(tan)
+        #         print 'segment y array: {}'.format(tan)
         plt.plot(a,fa,'om',small_t,tan, lineType)
 
     def calcYforZeroXOfTangent(self, spl, a):
@@ -151,7 +144,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
         fprime = sci.splev(a,spl,der=1) # f'(a)
         tanYArr = fa+fprime*(small_t-a) # tangent y coords array
-#         print 'zero X tangent segment y array: {}'.format(tanYArr)
+        #         print 'zero X tangent segment y array: {}'.format(tanYArr)
         return tanYArr[0]
 
     def findXForOptimalTangent(self, xSegment, spl, risklessY):
@@ -159,7 +152,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         for i in range(1, len(xSegment)-1):
             tangentY = self.calcYforZeroXOfTangent(spl, xSegment[i])
             if tangentY > risklessY:
-                print 'tangentY Found {} at xSegment[{}]={}, len(xSegment) = {}, previous prevTangentY={}'\
+                print 'tangentY Found {} at xSegment[{}]={}, len(xSegment) = {}, previous prevTangentY={}' \
                     .format(tangentY, i, xSegment[i], len(xSegment), prevTangentY)
                 return xSegment[i], tangentY, i
             else:
@@ -182,15 +175,15 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         plt.plot(x, y, alpha=0.5)
         plt.plot(0, riskless_asset, 'om')
         plt.plot(0, yOnZeroX,'og')
-#         plt.show()
+        #         plt.show()
         yOpt = sci.splev(xOpt, spl, der=0)     # f(a)
         plt.plot(xOpt, yOpt, 'b^')
         plt.savefig("efffrontier.png")
 
         weights = self.get_optimal_weights('Return', constraint=xOpt)
-#TODO: incorporate weights        return CPL(weights, xOpt, yOnZeroX, riskless_asset)
+        #TODO: incorporate weights        return CPL(weights, xOpt, yOnZeroX, riskless_asset)
         return CPL(self, xOpt, yOpt, riskless_asset)
-#         exit(0)
+    #         exit(0)
 
     def get_capital_market_line_bl(self, x, y, riskless_asset):
         '''
@@ -205,12 +198,12 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             the return of the riskless asset
         x, y arrays - result from previously called get_efficient_frontier
         '''
-# use x,y fromparameters - no need to call again get_efficient_frontier       x, y = self.get_efficient_frontier(100)
+        # use x,y fromparameters - no need to call again get_efficient_frontier       x, y = self.get_efficient_frontier(100)
 
         if len(x) == 1:
             raise ValueError('Efficient Frontier seems to be constant.')
         f_eff = sci.UnivariateSpline(x, y, s=0)
-# bl        f_eff = sci.InterpolatedUnivariateSpline(x, y)
+        # bl        f_eff = sci.InterpolatedUnivariateSpline(x, y)
         f_eff_der = f_eff.derivative(1)
 
         def tangent(x, rl=riskless_asset):
@@ -225,7 +218,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             sErr = "error: Can not find tangent. left == 0 and right == 0"
             print sErr
             raise ValueError(sErr)
-#             return CPL(self, x[0], y[0], riskless_asset) # temp fix
+        #             return CPL(self, x[0], y[0], riskless_asset) # temp fix
 
         zero_x = sco.brentq(tangent, left, right)
 
@@ -238,7 +231,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
     def search_sign_changing_bl(self, l, r, f, d):
         print 'search_sign_changing_bl: left={}, right={}, d={}'.format(l, r, d)
         if d < 0.000001:
-# orig            return (0, 0)
+            # orig            return (0, 0)
             return (l, r) # bl: if [d] is too small - return what we got so far
         for x in np.arange(l, r + d, d):
             if f(l) * f(x) < 0:
@@ -277,7 +270,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         rets = list()
         sharpe = list()
         weights = list()
-        
+
         if delta > 0:
             returns = np.arange(min_return, max_return + delta, delta)
             for r in returns:
@@ -302,7 +295,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         Overridden loads csv if was uploaded or calls super implementation
         '''
 
-        if self.source == 'upload' and self.uploadType != 'allcolumns':
+        if self.source == 'upload':
             dfRet = pd.DataFrame()
             for i, sym in enumerate(self.symbolsDf):
                 newSymData = self.dfUploadData.loc[self.dfUploadData['symbol'] == sym][['date', 'close']]
@@ -313,36 +306,36 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
                     dfRet = pd.merge(dfRet, newSymData, on='date')
 
             reversed = dfRet.set_index('date')
-#             reversed.to_csv('set_index_date.csv')
+            #             reversed.to_csv('set_index_date.csv')
             reversed = reversed.reindex(index=reversed.index[::-1])
-#             reversed.to_csv('set_index_date.csv')
-#             self.data = reversed.drop('date', axis = 1)
+            #             reversed.to_csv('set_index_date.csv')
+            #             self.data = reversed.drop('date', axis = 1)
             self.data = reversed
             self.data.columns = self.symbolsDf
 
-            self.data.to_csv('symbolsTransposed.csv')
-        elif self.source == 'upload1' or (self.source == 'upload' and self.uploadType == 'allcolumns'):
+            # self.data.to_csv('symbolsTransposed.csv')
+        elif self.source == 'upload1':
             self.dfUploadData = self.dfUploadData.set_index('date')
             self.data = self.dfUploadData
             print 'self.data.columns = {}'.format(self.data.columns)
-            print 'self.symbolsDf = {}'.format(self.symbolsDf)
+            # print 'self.symbolsDf = {}'.format(self.symbolsDf)
             self.data.columns = self.symbolsDf
-            self.data.to_csv('test.csv')
+            # self.data.to_csv('test.csv')
         else:
             super(MeanVariancePortfolio, self).load_data()
 
     def sortByWeight(self):
-        np.savetxt("output/self_mean_returns.csv", self.mean_returns, delimiter=",")
+        # np.savetxt("output/self_mean_returns.csv", self.mean_returns, delimiter=",")
         df = pd.DataFrame()
         df['s'] = self.symbols
         df['w'] = self.weights
         df['m'] = np.array(self.mean_returns)
-        df.to_csv('output/df_m.csv')
-        df.to_csv('output/df_before_sort.csv')
+        # df.to_csv('output/df_m.csv')
+        # df.to_csv('output/df_before_sort.csv')
         df.sort_values(by = 'w', ascending=False, inplace=True)
         self.symbols      = df['s'].values
         self.weights      = df['w'].values
         self.mean_returns = df['m'].astype('float64').values
-        df.to_csv('output/df_after_sort.csv')
+        # df.to_csv('output/df_after_sort.csv')
         # a = np.asarray([ self.symbols, self.weights, self.mean_returns ])
         # np.savetxt("output/self_s_w_m.csv", a, delimiter=",")

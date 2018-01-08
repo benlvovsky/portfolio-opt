@@ -47,10 +47,28 @@ def getEfficientFrontierPortfolios(port, evols):
     
     return portfolios
 
+
+def findSource(source):
+    if 'upload_type' in st.config["common"]:
+        uploadType = st.config["common"]["upload_type"]
+    else:
+        uploadType = ''
+
+    print 'upload_type = "{}"'.format(uploadType)
+
+    if source == 'upload' and uploadType != 'allcolumns':
+        retVal = 'upload'
+    elif source == 'upload' and uploadType == 'allcolumns':
+        retVal = 'upload1'
+    else:
+        retVal = source
+
+    return retVal
+
 def sharpeAndCml(source, riskFree, symbols):
     ma = dx.market_environment('ma', dt.date(2010, 1, 1))
     ma.add_list('symbols', symbols)
-    ma.add_constant('source', source)
+    ma.add_constant('source', findSource(source))
     # ma.add_constant('final date', dt.date(2014, 3, 1))
     ma.add_constant('final date', dt.datetime.now())
 
