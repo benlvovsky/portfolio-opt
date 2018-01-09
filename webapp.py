@@ -94,11 +94,11 @@ def uploadcsv1(sourceName):
     return "{{response:{{jobuid:'{}',success:true}}}}".format(str(uid))
 
 def threadFunc(sourceName, riskFree, uid):
+    taskDict[uid] = (False, '') #not completed yet but started
     jsonStr = prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(riskFree), []))
-    taskDict[uid] = jsonStr
+    taskDict[uid] = (True, jsonStr) #completed and result is there
 
 def determineRiskFree(riskFree):
-    # riskFree = request.form.get('riskfree')
     print ('request riskfree={}'.format(riskFree))
     if riskFree is None:
         riskFree = st.config["efficient_frontier"]["default_riskfree"]
