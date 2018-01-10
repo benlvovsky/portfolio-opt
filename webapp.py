@@ -1,13 +1,9 @@
 import markowitz as mark
-from threading import Thread
-import uuid
 from flask import Flask
 from flask import request
 import json
 import settings as st
 import os
-
-taskDict = {}
 
 app = Flask(__name__)
 
@@ -80,7 +76,7 @@ def uploadcsvGeneric(sourceName):
     return prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(request.form.get('riskfree')), []))
 
 @app.route('/uploadasync', methods=['POST'])
-def uploadcsv1(sourceName):
+def uploadasync(sourceName):
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
 
@@ -88,15 +84,7 @@ def uploadcsv1(sourceName):
         os.makedirs(uploadDir)
     f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
 
-    uid = uuid.uuid4()
-    t = Thread(target=threadFunc, args=(sourceName, request.form.get('riskfree')), uid)
-    t.start()
-    return "{{response:{{jobuid:'{}',success:true}}}}".format(str(uid))
-
-def threadFunc(sourceName, riskFree, uid):
-    taskDict[uid] = (False, '') #not completed yet but started
-    jsonStr = prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(riskFree), []))
-    taskDict[uid] = (True, jsonStr) #completed and result is there
+    return prettyJson(mark.sharpeAndCmlAsync(sourceName, determineRiskFree(request.form.get('riskfree'))))
 
 def determineRiskFree(riskFree):
     print ('request riskfree={}'.format(riskFree))

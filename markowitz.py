@@ -18,10 +18,14 @@ import meanvarianceportfolio as mvp
 import pandas as pd
 from pandas_datareader import data as web
 import os
+from threading import Thread
+import uuid
 # from scipy import interpolate
 # import sympy
 
 sns.set()
+
+taskDict = {}
 
 asxTop20 = ['CBA.AX','WBC.AX','BHP.AX','ANZ.AX','NAB.AX','CSL.AX','WES.AX','TLS.AX','WOW.AX',\
             'MQG.AX','RIO.AX','TCL.AX','WPL.AX','SCG.AX',\
@@ -96,6 +100,20 @@ def sharpeAndCml(source, riskFree, symbols):
 
     print retVal
     return retVal
+
+
+def sharpeAndCmlAsync(sourceName, riskFree):
+    uid = uuid.uuid4()
+    t = Thread(target=threadFunc, args=(sourceName, riskFree, uid))
+    t.start()
+    return "{{response:{{jobuid:'{}',success:true}}}}".format(str(uid))
+
+
+def threadFunc(sourceName, riskFree, uid):
+    taskDict[uid] = (False, '') #not completed yet but started
+    jsonStr = prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(riskFree), []))
+    taskDict[uid] = (True, jsonStr) #completed and result is there
+
 
 def downloadInstruments(source, symbols, start_date, final_date):
     dataDf = web.DataReader(symbols.split(','), source, start_date, final_date)['Adj Close']
