@@ -48,35 +48,18 @@ def efficientFrontier():
 
 @app.route('/upload', methods=['POST'])
 def uploadcsv():
-    return uploadcsvGeneric('upload')
-
-    # print 'upload'
-    # f = request.files['the_file']
-    # uploadDir = st.config["common"]["upload_directory"]
-    #
-    # if not os.path.exists(uploadDir):
-    #     os.makedirs(uploadDir)
-    # f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
-    #
-    # return prettyJson(mark.sharpeAndCml('upload', determineRiskFree(request.form.get('riskfree')), []))
+    return uploadcsvGeneric('upload', mark.sharpeAndCml)
 
 @app.route('/upload1', methods=['POST'])
 def uploadcsv1():
-    return uploadcsvGeneric('upload1')
-
-def uploadcsvGeneric(sourceName):
-    print 'Endpoint name called:' + sourceName
-    f = request.files['the_file']
-    uploadDir = st.config["common"]["upload_directory"]
-
-    if not os.path.exists(uploadDir):
-        os.makedirs(uploadDir)
-    f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
-
-    return prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(request.form.get('riskfree')), []))
+    return uploadcsvGeneric('upload1', mark.sharpeAndCml)
 
 @app.route('/uploadasync', methods=['POST'])
-def uploadasync(sourceName):
+def uploadasync():
+    return uploadcsvGeneric('upload1', mark.sharpeAndCmlAsync)
+
+def uploadcsvGeneric(sourceName, calcFunc):
+    print 'Source Name:' + sourceName
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
 
@@ -84,7 +67,7 @@ def uploadasync(sourceName):
         os.makedirs(uploadDir)
     f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
 
-    return prettyJson(mark.sharpeAndCmlAsync(sourceName, determineRiskFree(request.form.get('riskfree'))))
+    return prettyJson(calcFunc(sourceName, determineRiskFree(request.form.get('riskfree')), []))
 
 def determineRiskFree(riskFree):
     print ('request riskfree={}'.format(riskFree))
