@@ -34,6 +34,7 @@ def determineSource(val):
 
     return retVal
 
+
 @app.route('/ef')
 def efficientFrontier():
     print ('request source={}'.format(request.args.get('source')))
@@ -46,20 +47,31 @@ def efficientFrontier():
 
     return prettyJson(mark.sharpeAndCml(determineSource(request.args.get('source')), determineRiskFree(request.args.get('riskfree')), symbols))
 
+
 @app.route('/upload', methods=['POST'])
 def uploadcsv():
-    return uploadcsvGeneric('upload', mark.sharpeAndCml)
+    return uploadcsvGeneric('/upload', 'upload', mark.sharpeAndCml)
+
 
 @app.route('/upload1', methods=['POST'])
 def uploadcsv1():
-    return uploadcsvGeneric('upload1', mark.sharpeAndCml)
+    return uploadcsvGeneric('/upload1', 'upload1', mark.sharpeAndCml)
+
 
 @app.route('/uploadasync', methods=['POST'])
 def uploadasync():
-    return uploadcsvGeneric('upload1', mark.sharpeAndCmlAsync)
+    return uploadcsvGeneric('/uploadasync', 'upload1', mark.sharpeAndCmlAsync)
 
-def uploadcsvGeneric(sourceName, calcFunc):
-    print 'Source Name:' + sourceName
+
+@app.route('/getasynctaskresult')
+def checkAsyncCompletion():
+    uuid = request.args.get('uuid')
+    print ('request uuid={}'.format(uuid))
+    return prettyJson(mark.getAsyncTaskResult(uuid))
+
+
+def uploadcsvGeneric(endPointName, sourceName, calcFunc):
+    print 'Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName)
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
 
@@ -80,16 +92,16 @@ def determineRiskFree(riskFree):
     return float(riskFree)
 
 def prettyJson(notPretty):
-    outDir = 'output'
+    # outDir = 'output'
+    # if not os.path.exists(outDir):
+    #     os.makedirs(outDir)
+    # with open(outDir + '/lastjson_notpretty.js', 'w') as outfile:
+    #     outfile.write(notPretty)
     notPretty = notPretty.replace('\r\n', '')
-    with open(outDir + '/lastjson_notpretty.js', 'w') as outfile:
-        outfile.write(notPretty)
     parsed = json.loads(notPretty)
     jsStr = json.dumps(parsed, indent=4, sort_keys=True)
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
-    with open(outDir + '/lastjsonresponse.js', 'w') as outfile:
-        outfile.write(jsStr)
+    # with open(outDir + '/lastjsonresponse.js', 'w') as outfile:
+    #     outfile.write(jsStr)
     return jsStr
 
 if __name__ == "__main__":

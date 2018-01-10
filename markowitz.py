@@ -111,8 +111,21 @@ def sharpeAndCmlAsync(sourceName, riskFree):
 
 def threadFunc(sourceName, riskFree, uid):
     taskDict[uid] = (False, '') #not completed yet but started
-    jsonStr = prettyJson(mark.sharpeAndCml(sourceName, determineRiskFree(riskFree), []))
+    jsonStr = sharpeAndCml(sourceName, riskFree, [])
     taskDict[uid] = (True, jsonStr) #completed and result is there
+
+
+def getAsyncTaskResult(uid):
+    if uid in taskDict:
+        task = taskDict[uid]
+        if task[0]:
+            json = task[1]
+            taskDict.pop(uid, None)
+            return json
+        else:
+            return "{{response:{{uid:'{}',taskexists:true,taskcompleted:false}}}}".format(str(uid))
+    else:
+        return "{{response:{{uid:'{}',taskexists:true,taskcompleted:true}}}}".format(str(uid))
 
 
 def downloadInstruments(source, symbols, start_date, final_date):
