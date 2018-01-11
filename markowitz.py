@@ -106,7 +106,7 @@ def sharpeAndCmlAsync(sourceName, riskFree):
     uid = uuid.uuid4()
     t = Thread(target=threadFunc, args=(sourceName, riskFree, uid))
     t.start()
-    return "{{response:{{jobuid:'{}',success:true}}}}".format(str(uid))
+    return "{{response:{{uid:'{}',success:true}}}}".format(str(uid))
 
 
 def threadFunc(sourceName, riskFree, uid):
@@ -116,16 +116,14 @@ def threadFunc(sourceName, riskFree, uid):
 
 
 def getAsyncTaskResult(uid):
-    if uid in taskDict:
-        task = taskDict[uid]
-        if task[0]:
-            json = task[1]
-            taskDict.pop(uid, None)
-            return json
-        else:
-            return "{{response:{{uid:'{}',taskexists:true,taskcompleted:false}}}}".format(str(uid))
+    task = taskDict.pop(uid, None)
+    if task is None:
+        return "{{response:{{taskexists:false,taskcompleted:false}}}}"
     else:
-        return "{{response:{{uid:'{}',taskexists:true,taskcompleted:true}}}}".format(str(uid))
+        if task[0]:
+            return task[1]
+        else:
+            return "{{response:{{taskexists:true,taskcompleted:false}}}}"
 
 
 def downloadInstruments(source, symbols, start_date, final_date):
@@ -139,6 +137,7 @@ def downloadInstruments(source, symbols, start_date, final_date):
     # newDf.to_csv(downloadDir + '/downlWithEmpty.csv')
     newDf.dropna(axis=1, inplace=True)
     newDf.to_csv(downloadDir + '/dataAllcolsTop200.csv')
+
 
 if __name__ == "__main__":
     main()
