@@ -102,11 +102,11 @@ def sharpeAndCml(source, riskFree, symbols):
     return retVal
 
 
-def sharpeAndCmlAsync(sourceName, riskFree):
+def sharpeAndCmlAsync(sourceName, riskFree, placeHolderOnly):
     uid = uuid.uuid4()
     t = Thread(target=threadFunc, args=(sourceName, riskFree, uid))
     t.start()
-    return "{{response:{{uid:'{}',success:true}}}}".format(str(uid))
+    return '{{"response":{{"uid":"{}","success":true}}}}'.format(str(uid))
 
 
 def threadFunc(sourceName, riskFree, uid):
@@ -118,12 +118,18 @@ def threadFunc(sourceName, riskFree, uid):
 def getAsyncTaskResult(uid):
     task = taskDict.pop(uid, None)
     if task is None:
-        return "{{response:{{taskexists:false,taskcompleted:false}}}}"
+        return '{"response":{"taskexists":false, "taskcompleted":false}}'
     else:
         if task[0]:
             return task[1]
         else:
-            return "{{response:{{taskexists:true,taskcompleted:false}}}}"
+            return '{"response":{"taskexists":true, "taskcompleted":false}}'
+
+
+def getListAsyncTasks():
+    uidsList = taskDict.keys()
+    csvList = ",".join(map(str, uidsList))
+    return '{{"response":{{"tasklist":"{}"}}}}'.format(csvList)
 
 
 def downloadInstruments(source, symbols, start_date, final_date):

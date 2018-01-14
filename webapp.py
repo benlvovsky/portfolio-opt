@@ -70,6 +70,11 @@ def checkAsyncCompletion():
     return prettyJson(mark.getAsyncTaskResult(uuid))
 
 
+@app.route('/getlistasynctasks')
+def getlistasynctasks():
+    return prettyJson(mark.getListAsyncTasks())
+
+
 def uploadcsvGeneric(endPointName, sourceName, calcFunc):
     print 'Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName)
     f = request.files['the_file']
@@ -92,11 +97,11 @@ def determineRiskFree(riskFree):
     return float(riskFree)
 
 def prettyJson(notPretty):
-    # outDir = 'output'
-    # if not os.path.exists(outDir):
-    #     os.makedirs(outDir)
-    # with open(outDir + '/lastjson_notpretty.js', 'w') as outfile:
-    #     outfile.write(notPretty)
+    outDir = 'output'
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+    with open(outDir + '/lastjson_notpretty.js', 'w') as outfile:
+        outfile.write(notPretty)
     notPretty = notPretty.replace('\r\n', '')
     parsed = json.loads(notPretty)
     jsStr = json.dumps(parsed, indent=4, sort_keys=True)
