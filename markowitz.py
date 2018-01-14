@@ -116,7 +116,7 @@ def threadFunc(sourceName, riskFree, uid):
 
 
 def getAsyncTaskResult(uid):
-    task = taskDict.pop(uid, None)
+    task = taskDict.pop(uuid.UUID(uid), None)
     if task is None:
         return '{"response":{"taskexists":false, "taskcompleted":false}}'
     else:
