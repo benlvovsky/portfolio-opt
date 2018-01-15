@@ -115,6 +115,12 @@ def threadFunc(sourceName, riskFree, uid):
     taskDict[uid] = (True, jsonStr) #completed and result is there
 
 
+def getAsyncTaskStatus(uid):
+    task = taskDict.get(uuid.UUID(uid), None)
+    return '{{"response":{{"taskexists":{}, "taskcompleted":{}}}}}'.\
+        format(str(task is not None).lower(), str(task[0]).lower())
+
+
 def getAsyncTaskResult(uid):
     task = taskDict.get(uuid.UUID(uid), None)
     if task is None:

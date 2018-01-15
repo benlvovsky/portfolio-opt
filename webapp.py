@@ -75,6 +75,13 @@ def getlistasynctasks():
     return prettyJson(mark.getListAsyncTasks())
 
 
+@app.route('/getasynctaskstatus')
+def getasynctaskstatus():
+    uuid = request.args.get('uuid')
+    print ('request uuid={}'.format(uuid))
+    return prettyJson(mark.getAsyncTaskStatus(uuid))
+
+
 def uploadcsvGeneric(endPointName, sourceName, calcFunc):
     print 'Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName)
     f = request.files['the_file']
