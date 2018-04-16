@@ -37,8 +37,8 @@ globalTop200Str = 'AAPL,GOOGL,GOOG,MSFT,AMZN,FB,INTC,CSCO,CMCSA,PEP,AMGN,NVDA,TX
 
 def main():
     # sharpeAndCml('upload', 0.03, "")
-    start = dt.datetime(2010, 1, 1)
-    end = dt.datetime(2017, 12, 31)
+    start = dt.datetime(2010, 1, 1) #yyyy,mm,dd
+    end = dt.datetime(2018, 04, 15)
     print 'will run downloadInstruments'
     downloadInstruments('yahoo', globalTop200Str, start, end)
     print 'done'
