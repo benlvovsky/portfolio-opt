@@ -39,10 +39,10 @@ asxTop20Str = 'CBA.AX,WBC.AX,BHP.AX,ANZ.AX,NAB.AX,CSL.AX,WES.AX,TLS.AX,WOW.AX,MQ
 def main():
     # sharpeAndCml('upload', 0.03, "")
     start = dt.datetime(2013, 1, 1) #yyyy,mm,dd
-    end = dt.datetime(2018, 04, 15)
+    end = dt.datetime(2018, 04, 17)
     print 'will run downloadInstruments'
     # downloadInstruments('yahoo', globalTop200Str, start, end)
-    downloadInstruments('yahoo', asxTop20Str, start, end)
+    downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
     print 'done'
 
 def getEfficientFrontierPortfolios(port, evols):
@@ -50,7 +50,7 @@ def getEfficientFrontierPortfolios(port, evols):
     for v in evols:
         port.optimize('Return', constraint=v, constraint_type='Exact')
         portfolios.append(copy.copy(port))
-    
+
     return portfolios
 
 
@@ -141,7 +141,10 @@ def getListAsyncTasks():
     return '{{"response":{{"tasklist":"{}"}}}}'.format(csvList)
 
 
-def downloadInstruments(source, symbols, start_date, final_date):
+def downloadInstruments(source, symbols, start_date, final_date, downloadFileName):
+    print 'symbols.split={}'.format(symbols.split(','))
+    print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(source, start_date, final_date,
+                                                                                downloadFileName)
     dataDf = web.DataReader(symbols.split(','), source, start_date, final_date)['Adj Close']
     downloadDir = 'downloads'
     if not os.path.exists(downloadDir):
@@ -151,7 +154,7 @@ def downloadInstruments(source, symbols, start_date, final_date):
     newDf = dataDf.sort_index()
     # newDf.to_csv(downloadDir + '/downlWithEmpty.csv')
     newDf.dropna(axis=1, inplace=True)
-    newDf.to_csv(downloadDir + '/dataAllcolsTop200.csv')
+    newDf.to_csv(downloadDir + '/' + downloadFileName)
 
 
 if __name__ == "__main__":

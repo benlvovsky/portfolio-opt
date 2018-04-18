@@ -15,3 +15,6 @@ from dockerdm folder: `./lcompose.sh up`
 1. Manually fix dates in markowitz.py in main()
 2. run docker
 3. run main like `./markowitz.py`
+
+#downloading webrequest request sample
+`http://localhost:5000/download?from=01/01/2010&to=17/04/2018&downloadFileName=data.csv&symbols=CBA.AX,WBC.AX,BHP.AX,ANZ.AX,NAB.AX,CSL.AX,WES.AX,TLS.AX,WOW.AX,MQG.AX,RIO.AX,TCL.AX,WPL.AX,SCG.AX,WFD.AX,IAG.AX,AMP.AX,BXB.AX,QBE.AX`
