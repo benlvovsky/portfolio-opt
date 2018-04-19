@@ -2,6 +2,7 @@ import datetime as dt
 import markowitz as mark
 from flask import Flask
 from flask import request
+from flask import send_file
 import json
 import settings as st
 import os
@@ -84,7 +85,7 @@ def getasynctaskstatus():
 
 @app.route('/download')
 def download():
-    symbols=request.args.get('symbols')
+    symbols=request.args.get('symbols').encode("ascii")
     start_date = request.args.get('from')
     final_date = request.args.get('to')
     downloadFileName = request.args.get('downloadFileName')
@@ -96,12 +97,12 @@ def download():
     start = dt.datetime.strptime(start_date, '%d/%m/%Y')
     end   = dt.datetime.strptime(final_date, '%d/%m/%Y')
 
-    mark.downloadInstruments('yahoo', symbols, start, end, downloadFileName)
     try:
-        return Flask.send_file('downloads/' + downloadFileName, #as_attachment=True,
-                               attachment_filename=downloadFileName)
+        mark.downloadInstruments('yahoo', symbols, start, end, downloadFileName)
+        return send_file('downloads/' + downloadFileName, as_attachment=True,
+                         attachment_filename=downloadFileName, mimetype='text/csv')
     except Exception as e:
-        return str(e)
+        return '{{"response":{{"success":"false", "error":"{}"}} }}'.format(str(e))
 
 def uploadcsvGeneric(endPointName, sourceName, calcFunc):
     print 'Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName)

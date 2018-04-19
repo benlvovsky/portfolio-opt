@@ -43,7 +43,6 @@ def main():
     print 'will run downloadInstruments'
     # downloadInstruments('yahoo', globalTop200Str, start, end)
     downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
-    print 'done'
 
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
@@ -155,7 +154,7 @@ def downloadInstruments(source, symbols, start_date, final_date, downloadFileNam
     # newDf.to_csv(downloadDir + '/downlWithEmpty.csv')
     newDf.dropna(axis=1, inplace=True)
     newDf.to_csv(downloadDir + '/' + downloadFileName)
-
+    print 'done'
 
 if __name__ == "__main__":
     main()
