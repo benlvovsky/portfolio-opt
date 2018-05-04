@@ -6,5 +6,10 @@ common:
 efficient_frontier:
   points_number: 30
   default_riskfree: 0.04
-  default_datasource: 'yahoo'
+  default_datasource: 'morningstar'
   override_datasource: true
+downloader:
+  datasoucre:   'morningstar'
+  symbolColumn: 'Symbol'
+  dateColumn:   'Date'
+  priceColumn:  'Close'

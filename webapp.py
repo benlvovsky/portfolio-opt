@@ -98,7 +98,7 @@ def download():
     end   = dt.datetime.strptime(final_date, '%d/%m/%Y')
 
     try:
-        mark.downloadInstruments('yahoo', symbols, start, end, downloadFileName)
+        mark.downloadInstruments(determineSource(None), symbols, start, end, downloadFileName)
         return send_file('downloads/' + downloadFileName, as_attachment=True,
                          attachment_filename=downloadFileName, mimetype='text/csv')
     except Exception as e:
