@@ -21,6 +21,8 @@ RUN apt-get install -y \
 	python-dev \
 	zlib1g-dev
 
+RUN pip install --upgrade pip
+
 RUN pip install 'scipy==0.13.3'
 RUN pip install 'seaborn==0.8'
 RUN pip install 'sqlparse==0.1.19'
@@ -84,8 +86,10 @@ RUN pip install 'netifaces==0.8'
 RUN pip install 'nose==1.3.7'
 RUN pip install 'numpy==1.8.2'
 RUN pip install 'oauthlib==0.6.1'
-RUN pip install 'pandas==0.20.3'
-RUN pip install 'pandas-datareader==0.5.0'
+RUN pip install 'pandas'
+RUN pip install 'pandas-datareader'
+#RUN pip install 'pandas==0.20.3'
+#RUN pip install 'pandas-datareader==0.5.0'
 RUN pip install 'pandocfilters==1.4.2'
 RUN pip install 'patsy==0.4.1'
 RUN pip install 'psycopg2==2.6.2'
@@ -96,7 +100,8 @@ RUN pip install 'pycrypto==2.6.1'
 #RUN pip install 'pyflakes==1.0.0'
 #RUN pip install 'Pygments==2.2.0'
 
-RUN pip install 'matplotlib==1.3.1'
+RUN pip install matplotlib
+#RUN pip install 'matplotlib==1.3.1'
 RUN pip install sympy
 
 RUN mkdir -p /usr/src/app

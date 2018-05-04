@@ -16,7 +16,8 @@ import copy
 import settings as st
 import meanvarianceportfolio as mvp
 import pandas as pd
-from pandas_datareader import data as web
+# from pandas_datareader import data as web
+import pandas_datareader.data as web
 import os
 from threading import Thread
 import uuid
@@ -34,15 +35,17 @@ asxTop20 = ['CBA.AX','WBC.AX','BHP.AX','ANZ.AX','NAB.AX','CSL.AX','WES.AX','TLS.
 original = ['AAPL', 'GOOG', 'MSFT', 'FB']
 globalTop100Str = 'DDD,MMM,WBAI,WUBA,EGHT,AHC,AIR,AAN,ABB,ABT,ABBV,ANF,GCH,ACP,JEQ,SGF,ABM,AKR,ACN,ACCO,ATV,ATU,AYI,ADX,PEO,AGRO,ATGE,AAP,WMS,ASX,AAV,AVK,AGC,LCM,ACM,ANW,AED,AEG,AEH,AER,AJRD,AET,AMG,AFL,MITT,AGCO,A,AEM,ADC,AGU,AL,APD,AYR,AKS,ALG,AGI,ALK,AIN,ALB,AA,ALEX,ALX,ARE,AQN,Y,ATI,ALLE,AGN,ALE,AKP,ADS,AFB,AOI,AWF,AB,LNT,CBH,NCV,NCZ,ACV,NIE,NFJ,ALSN,ALL'
 globalTop200Str = 'AAPL,GOOGL,GOOG,MSFT,AMZN,FB,INTC,CSCO,CMCSA,PEP,AMGN,NVDA,TXN,AVGO,GILD,QCOM,KHC,PYPL,PCLN,ADBE,NFLX,CHTR,CELG,COST,SBUX,WBA,BIIB,BIDU,FOX,AABA,MDLZ,QQQ,AMAT,AMOV,TSLA,TMUS,MU,ADP,CSX,CME,MAR,ATVI,FOXA,ISRG,ESRX,REGN,CTSH,EBAY,INTU,JD,NXPI,VRTX,MNST,EQIX,EA,ADI,ILMN,LRCX,ROST,LBTYA,LBTYB,AMTD,LBTYK,ALXN,FISV,PCAR,NTES,DLTR,TROW,AAL,PAYX,WDC,IBKR,XEL,ADSK,SIRI,MYL,DISH,CERN,NTRS,WDAY,HBANO,VCSH,ORLY,FITB,MCHP,CTRP,INCY,PFG,WLTW,SBAC,EXPE,VCIT,ALGN,SWKS,INFO,DVY,SYMC,PFF,CHKP,XLNX,CTAS,KLAC,WYNN,LBRDK,LBRDA,BMRN,HBAN,VRSK,FAST,XRAY,NTAP,MXIM,ULTA,VOD,MELI,IDXX,CA,CBOE,VIA,ETFC,CTXS,ALNY,LSXMK,TTWO,SNPS,NDAQ,ASML,ANSS,LKQ,JBHT,FANG,NCLH,IPGP,SIVB,CHRW,SPLK,STX,EMB,CDNS,HOLX,CINF,MBB,SHPG,TEAM,ACGL,EXPD,CSJ,HAS,SEIC,MRVL,HSIC,GRMN,SHY,SNI,AKAM,AMD,YNDX,CSGP,ODFL,CGNX,CDW,VRSN,IAC,QVCA,RYAAY,STLD,SCZ,LULU,TRMB,VXUS,QVCB,VIAB,IBB,ZION,CPRT,NWS,FLEX,CDK,ON,NWSA,DOX,TSCO,EXEL,IEP,OTEX,DISCB,NKTR,AGNCB,JKHY,ACWI,EWBC,CZR,MTCH,QRVO,ABMD,NDSN,ALKS,DISCA,IXUS,OLED,SSNC,FFIV,JAZZ,BLUE,SGEN,DISCK,Z,ZG,BNDX,CG,SHV,FWONK,GT,SINA,FTNT,GLPI,IEF,SBNY,CIU,AGNC,MIDD,MKTX,PPC,WB,UHAL,COHR,HDS,NBIX,FSLR,COMM,QGEN'
-asxTop20Str = 'CBA.AX,WBC.AX,BHP.AX,ANZ.AX,NAB.AX,CSL.AX,WES.AX,TLS.AX,WOW.AX,MQG.AX,RIO.AX,TCL.AX,WPL.AX,SCG.AX,WFD.AX,IAG.AX,AMP.AX,BXB.AX,QBE.AX'
+asxTop20StrYahoo = 'CBA.AX,WBC.AX,BHP.AX,ANZ.AX,NAB.AX,CSL.AX,WES.AX,TLS.AX,WOW.AX,MQG.AX,RIO.AX,TCL.AX,WPL.AX,SCG.AX,WFD.AX,IAG.AX,AMP.AX,BXB.AX,QBE.AX'
+asxTop20StrGoogle = 'ASX:CBA,ASX:WBC,ASX:BHP,ASX:ANZ,ASX:NAB,ASX:CSL,ASX:WES,ASX:TLS,ASX:WOW,ASX:MQG,ASX:RIO,ASX:TCL,ASX:WPL,ASX:SCG,ASX:WFD,ASX:IAG,ASX:AMP,ASX:BXB,ASX:QBE'
 
 def main():
     # sharpeAndCml('upload', 0.03, "")
-    start = dt.datetime(2013, 1, 1) #yyyy,mm,dd
-    end = dt.datetime(2018, 04, 17)
+    start = dt.datetime(2008, 1, 1) #yyyy,mm,dd
+    end = dt.datetime(2018, 04, 30)
     print 'will run downloadInstruments'
-    # downloadInstruments('yahoo', globalTop200Str, start, end)
-    downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
+    # downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
+    # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
+    downloadInstruments('morningstar', globalTop200Str, 'Close', start, end, 'dataAllcolsTop200.csv')
 
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
@@ -140,11 +143,17 @@ def getListAsyncTasks():
     return '{{"response":{{"tasklist":"{}"}}}}'.format(csvList)
 
 
-def downloadInstruments(source, symbols, start_date, final_date, downloadFileName):
+def downloadInstruments_old_yahooNotSupportedAnyMoreByPandas(source, symbols, start_date, final_date, downloadFileName):
     print 'symbols.split={}'.format(symbols.split(','))
     print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(source, start_date, final_date,
                                                                                 downloadFileName)
-    dataDf = web.DataReader(symbols.split(','), source, start_date, final_date)['Adj Close']
+    allColumnsDf = web.DataReader(symbols.split(','), source, start_date, final_date)
+    print 'Columns list from DataReader: {}'.format(allColumnsDf.columns.values)
+    if 'Adj Close' in allColumnsDf:
+        dataDf = allColumnsDf['Adj Close']
+    else:
+        print 'Requered column doesn''t exist. Using the first column {}'.format(allColumnsDf.columns.values[1])
+        dataDf = allColumnsDf[1]
     downloadDir = 'downloads'
     if not os.path.exists(downloadDir):
         os.makedirs(downloadDir)
@@ -155,6 +164,53 @@ def downloadInstruments(source, symbols, start_date, final_date, downloadFileNam
     newDf.dropna(axis=1, inplace=True)
     newDf.to_csv(downloadDir + '/' + downloadFileName)
     print 'done'
+
+def downloadInstruments(source, symbols, priceColumnName, start_date, final_date, downloadFileName):
+    symbolsArray = symbols.split(',')
+    print 'symbols.split={}'.format(symbolsArray)
+    print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(source, start_date, final_date,
+                                                                                downloadFileName)
+    allColumnsOrigDf = web.DataReader(symbolsArray, source, start_date, final_date)
+    allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
+    print 'Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values)
+    print 'Index from DataReader: {}'.format(allColumnsNoIndexDf.index)
+    if priceColumnName in allColumnsNoIndexDf:
+        dataDf = allColumnsNoIndexDf[['Symbol','Date', priceColumnName]]
+    else:
+        print 'Required column doesn''t exist. Using the first column {}'.format(allColumnsNoIndexDf.columns.values[0])
+        dataDf = allColumnsNoIndexDf[['Symbol', 'Date', 'Close']]
+    downloadDir = 'downloads'
+    if not os.path.exists(downloadDir):
+        os.makedirs(downloadDir)
+
+    # allColumnsNoIndexDf.to_csv(downloadDir + '/downloadedInstrumentsNoIndexAllCols.csv')
+    # dataDf.to_csv(downloadDir + '/downloadedInstrumentsOnlyOnePriceColRaw.csv')
+    newDf = pivot(dataDf)
+    newDf.dropna(axis=1, inplace=True)
+    newDf.to_csv(downloadDir + '/' + downloadFileName)
+    print 'done'
+
+
+def pivot(dataDf):
+    symbolsArray = dataDf['Symbol'].unique()
+    print 'symbols in data: {}'.format(symbolsArray)
+    dfRet = pd.DataFrame()
+    for i, sym in enumerate(symbolsArray):
+        print 'sym={}'.format(sym)
+        newSymData = dataDf.loc[dataDf['Symbol'] == sym][['Date', 'Close']]
+        # dataDf.to_csv('downloads/newSymData.csv')
+        newSymData.columns = ['Date', sym]
+        if i < 1:
+            dfRet = newSymData.copy()
+        else:
+            dfRet = pd.merge(dfRet, newSymData, on='Date')
+
+    reversed = dfRet.set_index('Date')
+    reversed.index.names = ['date']
+    reversed = reversed.reindex(index=reversed.index[::-1])
+    data = reversed
+    data.columns = symbolsArray
+    return data
 
 if __name__ == "__main__":
     main()
