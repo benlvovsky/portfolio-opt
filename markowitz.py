@@ -42,12 +42,12 @@ smallGlobalStr = 'FB,INTC,CSCO,CMCSA'
 
 def main():
     # sharpeAndCml('upload', 0.03, "")
-    start = dt.datetime(2018, 1, 1) #yyyy,mm,dd
+    start = dt.datetime(2008, 1, 1) #yyyy,mm,dd
     end = dt.datetime(2018, 04, 30)
     print 'will run downloadInstruments'
     # downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
     # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
-    downloadInstruments(smallGlobalStr, start, end)
+    downloadInstruments(globalTop200Str, start, end)
 
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
@@ -205,7 +205,7 @@ def downloadInstruments(symbols, start_date, final_date):
     newDf.dropna(axis=1, inplace=True)
     newDf.to_csv(directory + '/' + downloadFileName)
     print 'download instruments done'
-    return directory + '/' + downloadFileName, downloadFileName
+    return directory + '/' + downloadFileName
 
 
 def pivot(dataDf):

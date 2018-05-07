@@ -88,20 +88,20 @@ def download():
     symbols=request.args.get('symbols').encode("ascii")
     start_date = request.args.get('from')
     final_date = request.args.get('to')
-    # downloadFileName = request.args.get('downloadFileName')
+    attachment_filename = request.args.get('downloadFileName')
     print ('request from={}'.format(start_date))
     print ('request to={}'.format(final_date))
     print ('request symbols={}'.format(symbols))
-    print ('request downloadFileName={}'.format(downloadFileName))
+    print ('request downloadFileName={}'.format(attachment_filename))
 
     start = dt.datetime.strptime(start_date, '%d/%m/%Y')
     end   = dt.datetime.strptime(final_date, '%d/%m/%Y')
 
     try:
         # mark.downloadInstruments(determineSource(None), symbols, start, end, downloadFileName)
-        (sendFilePath, sendFileName) = mark.downloadInstruments(symbols, start, end)
+        sendFilePath = mark.downloadInstruments(symbols, start, end)
         return send_file(sendFilePath, as_attachment=True,
-                         attachment_filename=sendFileName, mimetype='text/csv')
+                         attachment_filename=attachment_filename, mimetype='text/csv')
     except Exception as e:
         return '{{"response":{{"success":"false", "error":"{}"}} }}'.format(str(e))
 
