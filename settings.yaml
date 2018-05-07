@@ -8,8 +8,18 @@ efficient_frontier:
   default_riskfree: 0.04
   default_datasource: 'morningstar'
   override_datasource: true
-downloader:
-  datasoucre:   'morningstar'
+downloader_morningstar:
+  datasource:   'morningstar'
   symbolColumn: 'Symbol'
   dateColumn:   'Date'
   priceColumn:  'Close'
+  directory:    'downloads'
+
+#TIINGO
+downloader:
+  datasource:   'tiingo'
+  symbolColumn: 'symbol'
+  dateColumn:   'date'
+  priceColumn:  'adjClose'
+  directory:    'downloads'
+  access_key:   'b52aff4cd1d604991702bf6bec5151924323ac4a'
