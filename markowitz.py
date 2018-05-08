@@ -49,6 +49,7 @@ def main():
     # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
     downloadInstruments(globalTop200Str, start, end)
 
+
 def getEfficientFrontierPortfolios(port, evols):
     portfolios = list()
     for v in evols:
@@ -227,7 +228,7 @@ def pivot(dataDf):
 
     reversed = dfRet.set_index(dateColumn)
     reversed.index.names = ['date']
-    reversed = reversed.reindex(index=reversed.index[::-1])
+    # reversed = reversed.reindex(index=reversed.index[::-1])
     data = reversed
     data.columns = symbolsArray
     return data
