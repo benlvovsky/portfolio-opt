@@ -199,11 +199,63 @@ def downloadInstruments(symbols, start_date, final_date):
     session.headers['Connection'] = 'keep-alive'
     session.headers['Upgrade-Insecure-Requests'] = '1'
     session.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36'
+    print 'using headers v.3'
+    # allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key,
+    #                                   session=session, retry_count=10, pause=0.3)
+    allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
+                                           retry_count=10, pause=0.3, extheaders=session.headers).read()
+    allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
+    print 'Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values)
+    print 'Index from DataReader: {}'.format(allColumnsNoIndexDf.index)
+    if priceColumn in allColumnsNoIndexDf:
+        dataDf = allColumnsNoIndexDf[[symbolColumn,dateColumn, priceColumn]]
+    else:
+        print 'Column {} doesn''t exist. Using [''Symbol'', ''Date'', ''Close'']'.format(priceColumn)
+        dataDf = allColumnsNoIndexDf[['Symbol', 'Date', 'Close']]
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # allColumnsNoIndexDf.to_csv(downloadDir + '/downloadedInstrumentsNoIndexAllCols.csv')
+    # dataDf.to_csv(downloadDir + '/downloadedInstrumentsOnlyOnePriceColRaw.csv')
+    newDf = pivot(dataDf)
+    newDf.dropna(axis=1, inplace=True)
+    newDf.to_csv(directory + '/' + downloadFileName)
+    print 'download instruments done'
+    return directory + '/' + downloadFileName
+
+
+def downloadInstrumentsTiingo(symbols, start_date, final_date):
+    millis = int(round(time.time() * 1000))
+    downloadFileName = '{}.csv'.format(str(millis))
+
+    datasource  = st.config['downloader']['datasource']
+    symbolColumn= st.config['downloader']['symbolColumn']
+    dateColumn  = st.config['downloader']['dateColumn']
+    priceColumn = st.config['downloader']['priceColumn']
+    directory   = st.config['downloader']['directory']
+    access_key  = st.config['downloader']['access_key']
+
+    symbolsArray= symbols.split(',')
+    print 'datasource ={}'.format(datasource)
+    print 'symbolName ={}'.format(symbolColumn)
+    print 'dateColumn ={}'.format(dateColumn)
+    print 'priceColumn={}'.format(priceColumn)
+    print 'symbols.split={}'.format(symbolsArray)
+    print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(datasource, start_date, final_date,
+                                                                                downloadFileName)
+    session = requests.session()
+    session.headers = requests.utils.default_headers()
+    session.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
+    session.headers['Accept-Encoding'] = 'gzip, deflate, br'
+    session.headers['Accept-Language'] = 'en,ru-RU;q=0.9,ru;q=0.8,en-US;q=0.7'
+    session.headers['Cache-Control'] = 'max-age=0'
+    session.headers['Connection'] = 'keep-alive'
+    session.headers['Upgrade-Insecure-Requests'] = '1'
+    session.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36'
     print 'using headers v.2'
-    allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key,
-                                      session=session, retry_count=10, pause=0.1)
-    # allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
-    #                                        retry_count=20, pause=0.1, extheaders=session.headers).read()
+    # pd.read_json("https://api.tiingo.com/tiingo/daily/googl/prices?token=b52aff4cd1d604991702bf6bec5151924323ac4a")
+    allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
+                                           retry_count=20, pause=0.1, extheaders=session.headers).read()
     allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
     print 'Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values)
     print 'Index from DataReader: {}'.format(allColumnsNoIndexDf.index)
