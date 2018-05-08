@@ -199,7 +199,7 @@ def downloadInstruments(symbols, start_date, final_date):
     session.headers['Connection'] = 'keep-alive'
     session.headers['Upgrade-Insecure-Requests'] = '1'
     session.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36'
-    print 'using headers v.2'
+    print 'using headers v.3'
     allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key,
                                       session=session, retry_count=10, pause=0.1)
     # allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
