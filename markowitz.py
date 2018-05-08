@@ -2,6 +2,7 @@
 
 import traceback
 import matplotlib
+import requests
 matplotlib.use('Agg')
 #matplotlib.use('qt5agg')
 #matplotlib.use('qt4agg')
@@ -22,6 +23,7 @@ import pandas_datareader.data as web
 import os
 from threading import Thread
 import uuid
+import TiingoExt
 # from scipy import interpolate
 # import sympy
 
@@ -188,7 +190,20 @@ def downloadInstruments(symbols, start_date, final_date):
     print 'symbols.split={}'.format(symbolsArray)
     print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(datasource, start_date, final_date,
                                                                                 downloadFileName)
-    allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key)
+    session = requests.session()
+    session.headers = requests.utils.default_headers()
+    session.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
+    session.headers['Accept-Encoding'] = 'gzip, deflate, br'
+    session.headers['Accept-Language'] = 'en,ru-RU;q=0.9,ru;q=0.8,en-US;q=0.7'
+    session.headers['Cache-Control'] = 'max-age=0'
+    session.headers['Connection'] = 'keep-alive'
+    session.headers['Upgrade-Insecure-Requests'] = '1'
+    session.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36'
+    print 'using headers v.2'
+    allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key,
+                                      session=session, retry_count=10, pause=0.1)
+    # allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
+    #                                        retry_count=20, pause=0.1, extheaders=session.headers).read()
     allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
     print 'Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values)
     print 'Index from DataReader: {}'.format(allColumnsNoIndexDf.index)

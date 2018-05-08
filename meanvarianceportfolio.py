@@ -315,7 +315,10 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
 
             # self.data.to_csv('symbolsTransposed.csv')
         elif self.source == 'upload1':
-            self.dfUploadData = self.dfUploadData.set_index('date')
+            self.dfUploadData['date'] = pd.to_datetime(self.dfUploadData['date'])
+            pd.to_datetime(self.dfUploadData['date'], inplace = True)
+            print 'set index to datetime'
+            # self.dfUploadData = self.dfUploadData.set_index('date')
             self.data = self.dfUploadData
             print 'self.data.columns = {}'.format(self.data.columns)
             # print 'self.symbolsDf = {}'.format(self.symbolsDf)
