@@ -111,3 +111,4 @@ ENV/
 .project
 .settings/
 output/
+upload/
