@@ -16,10 +16,18 @@ downloader_morningstar:
   directory:    'downloads'
 
 #TIINGO
-downloader:
+downloader_:
   datasource:   'tiingo'
   symbolColumn: 'symbol'
   dateColumn:   'date'
   priceColumn:  'adjClose'
   directory:    'downloads'
   access_key:   'b52aff4cd1d604991702bf6bec5151924323ac4a'
+#QUANDL
+downloader:
+  datasource:   'quandl'
+  symbolColumn: 'symbol'
+  dateColumn:   'date'
+  priceColumn:  'adjClose'
+  directory:    'downloads'
+  access_key:   'KtxeUhoJZDsmvsmhVsWf'

@@ -23,6 +23,7 @@ import pandas_datareader.data as web
 import os
 from threading import Thread
 import uuid
+import findata as fd
 import TiingoExt
 # from scipy import interpolate
 # import sympy
@@ -49,7 +50,7 @@ def main():
     print 'will run downloadInstruments'
     # downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
     # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
-    downloadInstruments(smallGlobalStr, start, end)
+    fd.FinDownloader('quandl').downloadInstruments(smallGlobalStr, start, end)
 
 
 def getEfficientFrontierPortfolios(port, evols):
@@ -148,105 +149,6 @@ def getListAsyncTasks():
     return '{{"response":{{"tasklist":"{}"}}}}'.format(csvList)
 
 
-def downloadInstruments(symbols, start_date, final_date):
-    millis = int(round(time.time() * 1000))
-    downloadFileName = '{}.csv'.format(str(millis))
-
-    datasource  = st.config['downloader']['datasource']
-    symbolColumn= st.config['downloader']['symbolColumn']
-    dateColumn  = st.config['downloader']['dateColumn']
-    priceColumn = st.config['downloader']['priceColumn']
-    directory   = st.config['downloader']['directory']
-    access_key  = st.config['downloader']['access_key']
-
-    symbolsArray= symbols.split(',')
-    print 'datasource ={}'.format(datasource)
-    print 'symbolName ={}'.format(symbolColumn)
-    print 'dateColumn ={}'.format(dateColumn)
-    print 'priceColumn={}'.format(priceColumn)
-    print 'symbols.split={}'.format(symbolsArray)
-    print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(datasource, start_date, final_date,
-                                                                                downloadFileName)
-    session = requests.session()
-    session.headers = requests.utils.default_headers()
-    session.headers['Accept'] = 'text/html,application/json,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
-    session.headers['Accept-Encoding'] = 'gzip, deflate, br'
-    session.headers['Accept-Language'] = 'en,ru-RU;q=0.9,ru;q=0.8,en-US;q=0.7'
-    session.headers['Cache-Control'] = 'max-age=0'
-    session.headers['Connection'] = 'keep-alive'
-    session.headers['Upgrade-Insecure-Requests'] = '1'
-    session.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36'
-    session.headers['Content-Type'] = 'application/json'
-    session.headers['Authorization'] = 'Token {}'.format(access_key)
-    print 'using headers v.6'
-    # url = "https://api.tiingo.com/tiingo/daily/{}/prices?startDate=2012-1-1&endDate=2016-1-1&token={}".\
-    #     format(symbolsArray[0], access_key)
-    # print 'url={}'.format(url)
-    # # readJsonDf = pd.read_json("https://api.tiingo.com/tiingo/daily/{symbol}/prices?startDate=2012-1-1&endDate=2016-1-1&token={}", symbolsArray[0], access_key)
-    # # requestResponse = requests.get("https://api.tiingo.com/tiingo/daily/googl/prices?startDate=2012-1-1&endDate=2016-1-1", headers=session.headers)
-    # requestResponse = requests.get(url, headers=session.headers)
-    # readJsonDf = pd.read_json(requestResponse.json())
-    # print requestResponse.json()
-    # readJsonDf.to_csv(directory + '/readJsonDf.csv')
-    # return
-
-    # allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key,
-    #                                   session=session, retry_count=10, pause=0.3)
-    allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
-                                           retry_count=10, pause=0.3, extheaders=session.headers).read()
-    allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
-    print 'Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values)
-    print 'Index from DataReader: {}'.format(allColumnsNoIndexDf.index)
-    if priceColumn in allColumnsNoIndexDf:
-        dataDf = allColumnsNoIndexDf[[symbolColumn,dateColumn, priceColumn]]
-    else:
-        print 'Column {} doesn''t exist. Using [''Symbol'', ''Date'', ''Close'']'.format(priceColumn)
-        dataDf = allColumnsNoIndexDf[['Symbol', 'Date', 'Close']]
-    # dataDf.to_csv(downloadDir + '/downloadedInstrumentsOnlyOnePriceColRaw.csv')
-    newDf = pivot(dataDf)
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    # allColumnsNoIndexDf.to_csv(downloadDir + '/downloadedInstrumentsNoIndexAllCols.csv')
-    earliest_date = start_date + dt.timedelta(days=7)
-    cols_to_exclude =  newDf.loc[:earliest_date].isnull().all()
-    cols_to_keep    = ~cols_to_exclude
-    print 'Earliest date to compare: {}'.format(str(earliest_date))
-    print 'Columns to keep: {}'.format(str(cols_to_keep))
-    print 'Columns excluded: {}'.format(str(cols_to_exclude))
-    newDf = newDf.loc[:, cols_to_keep]
-    newDf.dropna(axis=1, inplace=True)
-
-    newDf.to_csv(directory + '/' + downloadFileName)
-    print 'download instruments done'
-    return directory + '/' + downloadFileName
-
-
-def pivot(dataDf):
-    symbolColumn= st.config['downloader']['symbolColumn']
-    dateColumn  = st.config['downloader']['dateColumn']
-    priceColumn = st.config['downloader']['priceColumn']
-    symbolsArray = dataDf[symbolColumn].unique()
-    print 'symbols in data: {}'.format(symbolsArray)
-    dfRet = pd.DataFrame()
-    for i, sym in enumerate(symbolsArray):
-        newSymData = dataDf.loc[dataDf[symbolColumn] == sym][[dateColumn, priceColumn]]
-        earliest_date = pd.to_datetime(newSymData['date']).min()
-        print 'sym={}, earliest date={}'.format(sym, earliest_date)
-        # dataDf.to_csv('downloads/newSymData.csv')
-        newSymData.columns = [dateColumn, sym]
-        if i < 1:
-            dfRet = newSymData.copy()
-        else:
-            dfRet = pd.merge(dfRet, newSymData, on=dateColumn, how='outer')
-
-    reversed = dfRet.set_index(dateColumn)
-    reversed.index.names = ['date']
-    # reversed = reversed.reindex(index=reversed.index[::-1])
-    data = reversed
-    data.columns = symbolsArray
-    return data
 
 if __name__ == "__main__":
     main()

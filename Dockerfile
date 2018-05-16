@@ -37,6 +37,7 @@ RUN pip install ptyprocess
 RUN pip install Cython
 RUN pip install PyYAML
 RUN pip install qtconsole
+RUN pip install quandl
 
 RUN mkdir -p /usr/src/app
 COPY . .
