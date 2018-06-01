@@ -24,10 +24,25 @@ downloader_:
   directory:    'downloads'
   access_key:   'b52aff4cd1d604991702bf6bec5151924323ac4a'
 #QUANDL
-downloader:
+downloader_:
   datasource:   'quandl'
   symbolColumn: 'symbol'
   dateColumn:   'date'
   priceColumn:  'adjClose'
   directory:    'downloads'
   access_key:   'KtxeUhoJZDsmvsmhVsWf'
+downloader_:
+  datasource:   'marketdata'
+  symbolColumn: 'symbol'
+  dateColumn:   'date'
+  priceColumn:  'adjClose'
+  directory:    'downloads'
+  access_key:   ''
+downloader:
+  datasource:   'converter'
+  symbolColumn: 'symbol'
+  dateColumn:   'date'
+  priceColumn:  'close'
+  directory:    'downloads'
+  inputfilename: 'upload/b.txt'
+  access_key:   ''

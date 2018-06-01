@@ -14,6 +14,8 @@ import uuid
 import TiingoExt
 import requests
 import quandlreader as qr
+import marketdata as md
+import converter as cv
 
 class FinDownloader():
     """
@@ -31,9 +33,7 @@ class FinDownloader():
         self.priceColumn    = st.config['downloader']['priceColumn']
         self.directory      = st.config['downloader']['directory']
         self.access_key     = st.config['downloader']['access_key']
-        self.symbolColumn   = st.config['downloader']['symbolColumn']
-        self.dateColumn     = st.config['downloader']['dateColumn']
-        self.priceColumn    = st.config['downloader']['priceColumn']
+        self.inputfilename  = st.config['downloader']['inputfilename']
 
     def downloadInstruments(self, symbols, start_date, final_date):
 
@@ -76,10 +76,12 @@ class FinDownloader():
         #                                   session=session, retry_count=10, pause=0.3)
 
         downloaders = {
-            "tiingo": TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=self.access_key,
-                                                          retry_count=10, pause=0.3, extheaders=session.headers),
-            "quandl": qr.Quandl(symbolsArray, start_date, final_date, api_key=self.access_key,
-                                 retry_count=10, pause=0.3, extheaders=session.headers)
+            "marketdata": md.MarketData(symbolsArray, start_date, final_date, session=session),
+            "converter": cv.FormatConverter(self.inputfilename)
+            # "tiingo": TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=self.access_key,
+            #                                               retry_count=10, pause=0.3, extheaders=session.headers),
+            # "quandl": qr.Quandl(symbolsArray, start_date, final_date, api_key=self.access_key,
+            #                      retry_count=10, pause=0.3, extheaders=session.headers)
         }
 
         # allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
