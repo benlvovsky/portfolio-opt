@@ -46,7 +46,7 @@ smallGlobalStr = 'AAPL,GOOGL,GOOG'
 
 def main():
     # sharpeAndCml('upload', 0.03, "")
-    start = dt.datetime(2008, 1, 1) #yyyy,mm,dd
+    start = dt.datetime(2012, 1, 1) #yyyy,mm,dd
     end = dt.datetime(2018, 04, 30)
     print 'will run downloadInstruments'
     # downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')

@@ -77,7 +77,7 @@ class FinDownloader():
 
         downloaders = {
             "marketdata": md.MarketData(symbolsArray, start_date, final_date, session=session),
-            "converter": cv.FormatConverter(self.inputfilename)
+            "converter": cv.FormatConverter(start_date, self.inputfilename)
             # "tiingo": TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=self.access_key,
             #                                               retry_count=10, pause=0.3, extheaders=session.headers),
             # "quandl": qr.Quandl(symbolsArray, start_date, final_date, api_key=self.access_key,
@@ -86,7 +86,6 @@ class FinDownloader():
 
         # allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
         #                                        retry_count=10, pause=0.3, extheaders=session.headers).read()
-        print downloaders
         allColumnsOrigDf = downloaders[self.source].read()
         allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
 
@@ -103,16 +102,21 @@ class FinDownloader():
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
-        # allColumnsNoIndexDf.to_csv(downloadDir + '/downloadedInstrumentsNoIndexAllCols.csv')
         earliest_date = start_date + dt.timedelta(days=7)
-        cols_to_exclude =  newDf.loc[:earliest_date].isnull().all()
+        newDf = newDf[newDf.index >= earliest_date]
+        newDf.to_csv('downloads/reduced.csv')
+        existing_earliest_date = newDf.index.min()
+        # existing_earliest_date = newDf.loc(newDf.index >= earliest_date).index.min()
+        print 'earliest_date = {}, existing_earliest_date = {}'.format(earliest_date, existing_earliest_date)
+        cols_to_exclude =  newDf.loc[:existing_earliest_date].isnull().all()
         cols_to_keep    = ~cols_to_exclude
-        print 'Earliest date to compare: {}'.format(str(earliest_date))
+        print 'Earliest date to compare: {}'.format(str(existing_earliest_date))
         print 'Columns to keep: {}'.format(str(cols_to_keep))
         print 'Columns excluded: {}'.format(str(cols_to_exclude))
         newDf = newDf.loc[:, cols_to_keep]
-        newDf.dropna(axis=1, inplace=True)
-
+        newDf.to_csv(self.directory + '/before_dropna_' + downloadFileName)
+        newDf.dropna(axis=0, inplace=True)
+        # newDf.dropna(axis=1, inplace=True)
         newDf.to_csv(self.directory + '/' + downloadFileName)
         print 'download instruments done'
         return self.directory + '/' + downloadFileName
@@ -132,9 +136,12 @@ class FinDownloader():
             else:
                 dfRet = pd.merge(dfRet, newSymData, on=self.dateColumn, how='outer')
 
-        reversed = dfRet.set_index(self.dateColumn)
+        dfRet[self.dateColumn] = pd.to_datetime(dfRet[self.dateColumn])
+        reversed = dfRet.set_index(self.dateColumn).sort_index()
+        # reversed.index = pd.to_datetime(reversed.index)
         reversed.index.names = ['date']
-        # reversed = reversed.reindex(index=reversed.index[::-1])
+        reversed.to_csv('downloads/df_reversed.csv')
+        #  reversed = reversed.reindex(index=reversed.index[::-1])
         data = reversed
         data.columns = symbolsArray
         return data
