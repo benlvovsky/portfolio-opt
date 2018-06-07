@@ -38,11 +38,21 @@ downloader_:
   priceColumn:  'adjClose'
   directory:    'downloads'
   access_key:   ''
-downloader:
-  datasource:   'converter'
+downloader_:
+  datasource:   'converter_invest'
   symbolColumn: 'symbol'
   dateColumn:   'date'
   priceColumn:  'close'
   directory:    'downloads'
   inputfilename: 'upload/b.txt'
+  access_key:   ''
+downloader:
+  datasource:   'converter_asxhist'
+  maxSparseness:  0.40
+  symbolColumn: 'symbol'
+  dateColumn:   'date'
+  dateFormat:   '%Y%m%d'
+  priceColumn:  'close'
+  directory:    'downloads'
+  inputfilename: 'upload/a.txt'
   access_key:   ''

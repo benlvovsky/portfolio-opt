@@ -46,13 +46,13 @@ smallGlobalStr = 'AAPL,GOOGL,GOOG'
 
 def main():
     # sharpeAndCml('upload', 0.03, "")
-    start = dt.datetime(2014, 1, 1) #yyyy,mm,dd
-    end = dt.datetime(2018, 04, 30)
+    start = dt.datetime(2013, 2, 1) #yyyy,mm,dd
+    end = dt.datetime(2017, 12, 01)
     print 'will run downloadInstruments'
     # downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
     # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
     # fd.FinDownloader('marketdata').downloadInstruments(marketDataASX, start, end)
-    fd.FinDownloader('converter').downloadInstruments("", start, end)
+    fd.FinDownloader('converter_asxhist').downloadInstruments("", start, end)
 
 
 def getEfficientFrontierPortfolios(port, evols):

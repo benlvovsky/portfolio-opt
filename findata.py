@@ -15,7 +15,8 @@ import TiingoExt
 import requests
 import quandlreader as qr
 import marketdata as md
-import converter as cv
+import converter_invest as cv_invest
+import converter_asxhist as cv_asxhist
 import numpy as np
 
 
@@ -31,12 +32,14 @@ class FinDownloader():
         self.pause = pause
         self.timeout = timeout
         self.datasource = st.config['downloader']['datasource']
+        self.max_sparseness = st.config['downloader']['maxSparseness']
         self.symbolColumn = st.config['downloader']['symbolColumn']
         self.dateColumn = st.config['downloader']['dateColumn']
         self.priceColumn = st.config['downloader']['priceColumn']
         self.directory = st.config['downloader']['directory']
         self.access_key = st.config['downloader']['access_key']
         self.inputfilename = st.config['downloader']['inputfilename']
+        self.date_format = st.config['downloader']['dateFormat']
 
     def downloadInstruments(self, symbols, start_date, final_date):
 
@@ -48,6 +51,7 @@ class FinDownloader():
         print 'symbolName ={}'.format(self.symbolColumn)
         print 'dateColumn ={}'.format(self.dateColumn)
         print 'priceColumn={}'.format(self.priceColumn)
+        print 'date_format={}'.format(self.date_format)
         print 'symbols.split={}'.format(symbolsArray)
         print 'source={}, start_date={}, final_date={}, downloadFileName={}'.format(self.datasource, start_date,
                                                                                     final_date,
@@ -83,7 +87,8 @@ class FinDownloader():
 
         downloaders = {
             "marketdata": md.MarketData(symbolsArray, start_date, final_date, session=session),
-            "converter": cv.FormatConverter(start_date, self.inputfilename)
+            "converter_invest":  cv_invest.FormatConverter(start_date, self.inputfilename),
+            "converter_asxhist": cv_asxhist.FormatConverter(start_date, self.inputfilename)
             # "tiingo": TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=self.access_key,
             #                                               retry_count=10, pause=0.3, extheaders=session.headers),
             # "quandl": qr.Quandl(symbolsArray, start_date, final_date, api_key=self.access_key,
@@ -110,7 +115,6 @@ class FinDownloader():
 
         earliest_date = start_date + dt.timedelta(days=7)
         newDf = newDf[newDf.index >= earliest_date]
-        newDf.to_csv('downloads/reduced.csv')
         existing_earliest_date = newDf.index.min()
         # existing_earliest_date = newDf.loc(newDf.index >= earliest_date).index.min()
         print 'earliest_date = {}, existing_earliest_date = {}'.format(earliest_date, existing_earliest_date)
@@ -121,7 +125,7 @@ class FinDownloader():
         print 'Columns excluded: {}'.format(str(cols_to_exclude))
         newDf = newDf.loc[:, cols_to_keep]
         newDf.to_csv(self.directory + '/before_dropna_' + downloadFileName)
-        newDf.dropna(axis=0, inplace=True)
+        # newDf.dropna(axis=0, inplace=True)
         newDf.dropna(axis=1, inplace=True)
         newDf.to_csv(self.directory + '/' + downloadFileName)
         print 'download instruments done'
@@ -132,44 +136,52 @@ class FinDownloader():
         symbolsArray = dataDf[self.symbolColumn].unique()
         # print 'symbols in data: {}'.format(symbolsArray)
         df_list=[]
-        dfRet = pd.DataFrame()
+
         for i, sym in enumerate(symbolsArray):
             newSymData = dataDf.loc[dataDf[self.symbolColumn] == sym][[self.dateColumn, self.priceColumn]]
-            earliest_date = pd.to_datetime(newSymData[self.dateColumn]).min()
+            newSymData[self.dateColumn] = pd.to_datetime(newSymData[self.dateColumn], format=self.date_format)
+                                                         # infer_datetime_format=True)
+            newSymData = newSymData.set_index(self.dateColumn)
+            newSymData.sort_index(inplace=True)
+            earliest_date = newSymData.index.min()
+            # earliest_date = pd.to_datetime(newSymData[self.dateColumn], format=self.date_format, infer_datetime_format=True).min()
             if start_date >= earliest_date:
                 print '{}.\tAdding sym=\'{}\': required {:%Y-%m-%d} >= earliest {:%Y-%m-%d}' \
                     .format(i, sym, start_date, earliest_date)
-                # dataDf.to_csv('downloads/newSymData.csv')
-                newSymData[self.dateColumn] = pd.to_datetime(newSymData[self.dateColumn])
-                # newSymData[self.priceColumn] = newSymData[self.priceColumn].astype(np.float64)
-                newSymData = newSymData.set_index(self.dateColumn)
-                newSymData = newSymData[pd.to_datetime(newSymData.index) >= start_date]
-                newSymData.dropna(axis=(0, 1), inplace=True)
-                newSymData.drop_duplicates(inplace=True)
+
+                # newSymData.dropna(axis=(0, 1), inplace=True)
+                # newSymData.drop_duplicates(inplace=True)
+                newSymData = newSymData[~newSymData.index.duplicated(keep='first')]
                 if newSymData.empty:
                     print '\t\tSkipped as empty'
                 elif len(newSymData.index) < 200:
-                    print '\t\tSkipped as too short'
+                    # newSymData.to_csv('downloads/too_short_{}.csv'.format(sym))
+                    print '\t\tSkipped as too short ({})'.format(len(newSymData.index))
                 elif final_date - dt.timedelta(days=7) >= newSymData.index.max():
                     print '\t\tSkipped as latest date {} is too far back'.format(newSymData.index.max())
                 else:
                     newSymData.index.names = [self.dateColumn]
                     newSymData.columns = [sym]
-                    newSymData.sort_index(inplace=True)
                     newSymData.to_csv('downloads/{}.csv'.format(sym))
+                    newSymData = newSymData[newSymData.index >= start_date]
                     df_list.append(newSymData)
             else:
                 print '{}.\tSkipped. sym=\'{}\': required {:%Y-%m-%d} < earliest {:%Y-%m-%d}' \
                     .format(i, sym, start_date, earliest_date)
 
-        dfRet = pd.concat(df_list, axis=1, join='outer')
-        dfRet.to_csv('downloads/df_before_dropna_tresh.csv')
-        # dfRet.replace('', np.nan, inplace=True)
-        thresh = len(dfRet) * .2
-        dfRet = dfRet.dropna(thresh=thresh, axis=1)
-        dfRet.to_csv('downloads/df_after_dropna_tresh.csv')
-        dfRet.fillna(method='bfill', inplace=True)
-        dfRet.sort_index(inplace=True)
-        dfRet.index.names = ['date']
-        dfRet.to_csv('downloads/df_ret.csv')
-        return dfRet
+        df_ret = pd.concat(df_list, axis=1, join='outer')
+        df_ret.to_csv('downloads/df_before_dropna_tresh.csv')
+        df_ret.replace(r'^\s*$', np.nan, regex=True, inplace = True)
+        sparseness = df_ret.isnull().sum() / len(df_ret.index)
+        print 'max_sparseness={}, type(max_sparseness)={}'.format(self.max_sparseness, type(self.max_sparseness))
+        cols_to_keep = sparseness < self.max_sparseness
+        cols_to_drop = ~cols_to_keep
+        df_ret = df_ret.loc[:, cols_to_keep]
+        print 'cols_to_drop:'
+        print cols_to_drop[cols_to_drop == True]
+        df_ret.sort_index(inplace=True)
+        df_ret.to_csv('downloads/df_after_dropna_tresh.csv')
+        df_ret = df_ret.fillna(method='bfill').fillna(method='ffill')
+        df_ret.index.names = ['date']
+        df_ret.to_csv('downloads/df_ret.csv')
+        return df_ret
