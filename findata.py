@@ -31,15 +31,17 @@ class FinDownloader():
         self.retry_count = retry_count
         self.pause = pause
         self.timeout = timeout
-        self.datasource = st.config['downloader']['datasource']
-        self.max_sparseness = st.config['downloader']['maxSparseness']
-        self.symbolColumn = st.config['downloader']['symbolColumn']
-        self.dateColumn = st.config['downloader']['dateColumn']
-        self.priceColumn = st.config['downloader']['priceColumn']
-        self.directory = st.config['downloader']['directory']
-        self.access_key = st.config['downloader']['access_key']
-        self.inputfilename = st.config['downloader']['inputfilename']
-        self.date_format = st.config['downloader']['dateFormat']
+
+        self.datasource     = st.config['downloaders'][source]['datasource']
+        self.max_sparseness = st.config['downloaders'][source]['maxSparseness']
+        self.symbolColumn   = st.config['downloaders'][source]['symbolColumn']
+        self.dateColumn     = st.config['downloaders'][source]['dateColumn']
+        self.priceColumn    = st.config['downloaders'][source]['priceColumn']
+        self.directory      = st.config['downloaders'][source]['directory']
+        self.access_key     = st.config['downloaders'][source]['access_key']
+        self.inputfilename  = st.config['downloaders'][source]['inputfilename']
+        self.date_format    = st.config['downloaders'][source]['dateFormat']
+
 
     def downloadInstruments(self, symbols, start_date, final_date):
 
@@ -71,19 +73,6 @@ class FinDownloader():
         session.headers['Content-Type'] = 'application/json'
         session.headers['Authorization'] = 'Token {}'.format(self.access_key)
         print 'using headers v.6'
-        # url = "https://api.tiingo.com/tiingo/daily/{}/prices?startDate=2012-1-1&endDate=2016-1-1&token={}".\
-        #     format(symbolsArray[0], access_key)
-        # print 'url={}'.format(url)
-        # # readJsonDf = pd.read_json("https://api.tiingo.com/tiingo/daily/{symbol}/prices?startDate=2012-1-1&endDate=2016-1-1&token={}", symbolsArray[0], access_key)
-        # # requestResponse = requests.get("https://api.tiingo.com/tiingo/daily/googl/prices?startDate=2012-1-1&endDate=2016-1-1", headers=session.headers)
-        # requestResponse = requests.get(url, headers=session.headers)
-        # readJsonDf = pd.read_json(requestResponse.json())
-        # print requestResponse.json()
-        # readJsonDf.to_csv(directory + '/readJsonDf.csv')
-        # return
-
-        # allColumnsOrigDf = web.DataReader(symbolsArray, datasource, start_date, final_date, access_key=access_key,
-        #                                   session=session, retry_count=10, pause=0.3)
 
         downloaders = {
             "marketdata": md.MarketData(symbolsArray, start_date, final_date, session=session),
@@ -95,8 +84,6 @@ class FinDownloader():
             #                      retry_count=10, pause=0.3, extheaders=session.headers)
         }
 
-        # allColumnsOrigDf = TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=access_key,
-        #                                        retry_count=10, pause=0.3, extheaders=session.headers).read()
         allColumnsOrigDf = downloaders[self.source].read()
         allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
 
@@ -121,14 +108,14 @@ class FinDownloader():
         cols_to_exclude = newDf.loc[:existing_earliest_date].isnull().all()
         cols_to_keep = ~cols_to_exclude
         print 'Earliest date to compare: {}'.format(str(existing_earliest_date))
-        print 'Columns to keep: {}'.format(str(cols_to_keep))
-        print 'Columns excluded: {}'.format(str(cols_to_exclude))
+        # print 'Columns to keep: {}'.format(str(cols_to_keep))
+        # print 'Columns excluded: {}'.format(str(cols_to_exclude))
         newDf = newDf.loc[:, cols_to_keep]
         newDf.to_csv(self.directory + '/before_dropna_' + downloadFileName)
         # newDf.dropna(axis=0, inplace=True)
         newDf.dropna(axis=1, inplace=True)
         newDf.to_csv(self.directory + '/' + downloadFileName)
-        print 'download instruments done'
+        print 'instruments download finished'
         return self.directory + '/' + downloadFileName
 
 

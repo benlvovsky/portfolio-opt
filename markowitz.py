@@ -52,16 +52,17 @@ def main():
     # downloadInstruments('yahoo', asxTop20Str, start, end, 'dataAllcolsTop200.csv')
     # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
     # fd.FinDownloader('marketdata').downloadInstruments(marketDataASX, start, end)
-    fd.FinDownloader('converter_asxhist').downloadInstruments("", start, end)
+    source = st.config['downloader']['activesource']
+    fd.FinDownloader(source).downloadInstruments("", start, end)
 
 
-def getEfficientFrontierPortfolios(port, evols):
-    portfolios = list()
-    for v in evols:
-        port.optimize('Return', constraint=v, constraint_type='Exact')
-        portfolios.append(copy.copy(port))
-
-    return portfolios
+# def getEfficientFrontierPortfolios(port, evols):
+#     portfolios = list()
+#     for v in evols:
+#         port.optimize('Return', constraint=v, constraint_type='Exact')
+#         portfolios.append(copy.copy(port))
+#
+#     return portfolios
 
 
 def findSource(source):

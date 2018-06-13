@@ -15,44 +15,39 @@ downloader_morningstar:
   priceColumn:  'Close'
   directory:    'downloads'
 
-#TIINGO
-downloader_:
-  datasource:   'tiingo'
-  symbolColumn: 'symbol'
-  dateColumn:   'date'
-  priceColumn:  'adjClose'
-  directory:    'downloads'
-  access_key:   'b52aff4cd1d604991702bf6bec5151924323ac4a'
-#QUANDL
-downloader_:
-  datasource:   'quandl'
-  symbolColumn: 'symbol'
-  dateColumn:   'date'
-  priceColumn:  'adjClose'
-  directory:    'downloads'
-  access_key:   'KtxeUhoJZDsmvsmhVsWf'
-downloader_:
-  datasource:   'marketdata'
-  symbolColumn: 'symbol'
-  dateColumn:   'date'
-  priceColumn:  'adjClose'
-  directory:    'downloads'
-  access_key:   ''
-downloader_:
-  datasource:   'converter_invest'
-  symbolColumn: 'symbol'
-  dateColumn:   'date'
-  priceColumn:  'close'
-  directory:    'downloads'
-  inputfilename: 'upload/b.txt'
-  access_key:   ''
 downloader:
-  datasource:   'converter_asxhist'
-  maxSparseness:  0.40
-  symbolColumn: 'symbol'
-  dateColumn:   'date'
-  dateFormat:   '%Y%m%d'
-  priceColumn:  'close'
-  directory:    'downloads'
-  inputfilename: 'upload/a.txt'
-  access_key:   ''
+  activesource:   'converter_asxhist'
+
+downloaders:
+  quandl:
+    datasource:   'quandl'
+    symbolColumn: 'symbol'
+    dateColumn:   'date'
+    priceColumn:  'adjClose'
+    directory:    'downloads'
+    access_key:   'KtxeUhoJZDsmvsmhVsWf'
+  marketdata:
+    datasource:   'marketdata'
+    symbolColumn: 'symbol'
+    dateColumn:   'date'
+    priceColumn:  'adjClose'
+    directory:    'downloads'
+    access_key:   ''
+  converter_invest:
+    datasource:   'converter_invest'
+    symbolColumn: 'symbol'
+    dateColumn:   'date'
+    priceColumn:  'close'
+    directory:    'downloads'
+    inputfilename: 'upload/b.txt'
+    access_key:   ''
+  converter_asxhist:
+    datasource:   'converter_asxhist'
+    maxSparseness:  0.05
+    symbolColumn: 'symbol'
+    dateColumn:   'date'
+    dateFormat:   '%Y%m%d'
+    priceColumn:  'close'
+    directory:    'downloads'
+    inputfilename: 'upload/a.txt'
+    access_key:   ''
