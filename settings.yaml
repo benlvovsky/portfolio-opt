@@ -16,7 +16,8 @@ downloader_morningstar:
   directory:    'downloads'
 
 downloader:
-  activesource:   'converter_asxhist'
+#  activesource:   'converter_asxhist'
+  activesource:   'converter_invest'
 
 downloaders:
   quandl:
@@ -35,8 +36,10 @@ downloaders:
     access_key:   ''
   converter_invest:
     datasource:   'converter_invest'
+    maxSparseness:  0.05
     symbolColumn: 'symbol'
     dateColumn:   'date'
+    dateFormat:   '%b %d, %Y'
     priceColumn:  'close'
     directory:    'downloads'
     inputfilename: 'upload/b.txt'
