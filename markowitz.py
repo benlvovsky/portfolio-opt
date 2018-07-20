@@ -25,7 +25,7 @@ import os
 from threading import Thread
 import uuid
 import findata as fd
-import TiingoExt
+import tiingoext
 # from scipy import interpolate
 # import sympy
 
@@ -54,7 +54,7 @@ def main():
     # downloadInstruments('morningstar', 'AAPL,GOOGL', 'Close', start, end, 'dataAllcolsTop200.csv')
     # fd.FinDownloader('marketdata').downloadInstruments(marketDataASX, start, end)
     source = st.config['downloader']['activesource']
-    fd.FinDownloader(source).downloadInstruments("", start, end)
+    fd.FinDownloader(source).downloadInstruments(smallGlobalStr, start, end)
 
 
 # def getEfficientFrontierPortfolios(port, evols):

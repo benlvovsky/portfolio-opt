@@ -11,16 +11,15 @@ import pandas_datareader.data as web
 import os
 from threading import Thread
 import uuid
-import TiingoExt
+import tiingoext            as cv_tiingo
+import converter_invest     as cv_invest
+import converter_asxhist    as cv_asxhist
 import requests
 import quandlreader as qr
 import marketdata as md
-import converter_invest as cv_invest
-import converter_asxhist as cv_asxhist
 import numpy as np
 
-
-class FinDownloader():
+class FinDownloader:
     """
     Historical daily data downloader
     """
@@ -77,11 +76,11 @@ class FinDownloader():
         downloaders = {
             "marketdata": md.MarketData(symbolsArray, start_date, final_date, session=session),
             "converter_invest":  cv_invest.FormatConverter(start_date, self.inputfilename),
-            "converter_asxhist": cv_asxhist.FormatConverter(start_date, self.inputfilename)
-            # "tiingo": TiingoExt.TiingoExt(symbolsArray, start_date, final_date, api_key=self.access_key,
-            #                                               retry_count=10, pause=0.3, extheaders=session.headers),
-            # "quandl": qr.Quandl(symbolsArray, start_date, final_date, api_key=self.access_key,
-            #                      retry_count=10, pause=0.3, extheaders=session.headers)
+            "converter_asxhist": cv_asxhist.FormatConverter(start_date, self.inputfilename),
+            "tiingo":            cv_tiingo.TiingoExt(symbolsArray, start_date, final_date, api_key=self.access_key,
+                                                           retry_count=10, pause=0.3, extheaders=session.headers),
+            "quandl": qr.Quandl(symbolsArray, start_date, final_date, api_key=self.access_key,
+                                  retry_count=10, pause=0.3, extheaders=session.headers)
         }
 
         allColumnsOrigDf = downloaders[self.source].read()

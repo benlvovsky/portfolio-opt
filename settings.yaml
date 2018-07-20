@@ -16,23 +16,40 @@ downloader_morningstar:
   directory:    'downloads'
 
 downloader:
-#  activesource:   'converter_asxhist'
-  activesource:   'converter_invest'
+  activesource:   'tiingo'
+#  activesource:   'converter_invest'
 
 downloaders:
-  quandl:
-    datasource:   'quandl'
+  tiingo:
+    datasource:   'tiingo'
+    maxSparseness:  0.05
     symbolColumn: 'symbol'
     dateColumn:   'date'
+    dateFormat:   '%Y-%m-%d'
     priceColumn:  'adjClose'
     directory:    'downloads'
+    inputfilename: 'upload/a.txt'
+    access_key:   'b52aff4cd1d604991702bf6bec5151924323ac4a'
+  quandl:
+    datasource:   'quandl'
+    maxSparseness:  0.05
+    symbolColumn: 'symbol'
+    dateColumn:   'date'
+    dateFormat:   '%Y%m%d'
+    priceColumn:  'adjClose'
+    directory:    'downloads'
+    inputfilename: 'upload/a.txt'
     access_key:   'KtxeUhoJZDsmvsmhVsWf'
   marketdata:
     datasource:   'marketdata'
+    maxSparseness:  0.05
     symbolColumn: 'symbol'
     dateColumn:   'date'
+    dateFormat:   '%Y%m%d'
     priceColumn:  'adjClose'
+    inputfilename: 'upload/a.txt'
     directory:    'downloads'
+    inputfilename: 'upload/a.txt'
     access_key:   ''
   converter_invest:
     datasource:   'converter_invest'
