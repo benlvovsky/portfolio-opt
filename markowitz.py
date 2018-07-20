@@ -12,12 +12,13 @@ matplotlib.use('Agg')
 # from dx import *
 import datetime as dt
 import time
+import pandas as pd
+pd.core.common.is_list_like = pd.api.types.is_list_like
 import dx
 import seaborn as sns;
 import copy
 import settings as st
 import meanvarianceportfolio as mvp
-import pandas as pd
 # from pandas_datareader import data as web
 import pandas_datareader.data as web
 import os
