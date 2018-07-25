@@ -17,7 +17,8 @@ class TiingoExt(TiingoDailyReader):
         headers = {'Content-Type': 'application/json',
                    'Authorization': 'Token ' + self.api_key}
         headers.update(self.extheaders)
-        print 'headers={}'.format(headers)
+        # print 'headers={}'.format(headers)
+        print 'url={}'.format(url)
         except_to_throw = None
         for i in range(self.retry_count):
             try:
@@ -26,9 +27,11 @@ class TiingoExt(TiingoDailyReader):
             except  requests.exceptions.ConnectionError, e:
                 print 'Exception {}'.format(e)
                 except_to_throw = e
-                pass
 
-        raise except_to_throw
+        print 'Symbol {} skipped due to exception: {}'.format(except_to_throw)
+        return None
+
+    # raise except_to_throw
 
     def read(self):
         df_orig = super(TiingoExt, self).read()

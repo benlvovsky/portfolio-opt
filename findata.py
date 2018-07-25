@@ -91,7 +91,7 @@ class FinDownloader:
         if self.priceColumn in allColumnsNoIndexDf:
             dataDf = allColumnsNoIndexDf[[self.symbolColumn, self.dateColumn, self.priceColumn]]
         else:
-            print 'Column {} doesn''t exist. Using [''Symbol'', ''Date'', ''Close'']'.format(self.priceColumn)
+            print 'Column {} doesn''t exist. Trying fallback for using [''Symbol'', ''Date'', ''Close'']'.format(self.priceColumn)
             dataDf = allColumnsNoIndexDf[['Symbol', 'Date', 'Close']]
         # dataDf.to_csv(downloadDir + '/downloadedInstrumentsOnlyOnePriceColRaw.csv')
         newDf = self.pivot(dataDf, start_date, final_date)
