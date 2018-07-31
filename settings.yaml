@@ -17,7 +17,6 @@ downloader_morningstar:
 
 downloader:
   activesource:   'tiingo'
-#  activesource:   'converter_invest'
   dateFormat:     '%Y-%m-%d'
   startDate:      '2010-12-31'
   endDate:        '2018-07-24'
