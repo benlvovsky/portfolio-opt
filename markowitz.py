@@ -45,6 +45,27 @@ marketDataASX= 'BHP,ANZ,CBA,WBC,NAB,CSL,WES,TLS,WOW,MQG,RIO,TCL,WPL,SCG,WFD,IAG,
 asxTop20StrGoogle = 'ASX:CBA,ASX:WBC,ASX:BHP,ASX:ANZ,ASX:NAB,ASX:CSL,ASX:WES,ASX:TLS,ASX:WOW,ASX:MQG,ASX:RIO,ASX:TCL,ASX:WPL,ASX:SCG,ASX:WFD,ASX:IAG,ASX:AMP,ASX:BXB,ASX:QBE'
 smallGlobalStr = 'AAPL,GOOGL,GOOG'
 
+ZERO = dt.timedelta(0)
+HOUR = dt.timedelta(hours=1)
+
+
+# A UTC class.
+class UTC(dt.tzinfo):
+    """UTC"""
+
+    def utcoffset(self, dt):
+        return ZERO
+
+    def tzname(self, dt):
+        return "UTC"
+
+    def dst(self, dt):
+        return ZERO
+
+
+utc = UTC()
+
+
 def main():
     # sharpeAndCml('upload', 0.03, "")
     # start = dt.datetime(2011, 1, 1) #yyyy,mm,dd
@@ -59,9 +80,9 @@ def main():
     symbols     = st.config['downloader']['symbols']
     dateFormat  = st.config['downloader']['dateFormat']
 
-    fd.FinDownloader(source).downloadInstruments(symbols,
-                                                 dt.datetime.strptime(startDate, dateFormat),
-                                                 dt.datetime.strptime(endDate, dateFormat))
+    startDateDT = dt.datetime.strptime(startDate, dateFormat).replace(tzinfo=utc)
+    endDateDT = dt.datetime.strptime(endDate, dateFormat).replace(tzinfo=utc)
+    fd.FinDownloader(source).downloadInstruments(symbols, startDateDT, endDateDT)
 
 
 # def getEfficientFrontierPortfolios(port, evols):
@@ -110,11 +131,11 @@ def sharpeAndCml(source, riskFree, symbols):
             cpl = port.get_capital_market_line_bl_1(effFrontier.vols, effFrontier.rets, riskless_asset=riskFree)
             retVal += '"CML":' + cpl.toJson()
         except Exception, e:
-            retVal += '"CML": {{"error":"{}"}}'.format(str(e))
+            retVal += '"CML": {{"error":"{}"}}'.format(str(e).replace('"', '\''))
             traceback.print_exc()
 
     except Exception, e:
-        retVal += '{{"error":"{}"}}'.format(str(e))
+        retVal += '{{"error":"{}"}}'.format(str(e).replace('"', '\''))
         traceback.print_exc()
 
     retVal += "\n}"

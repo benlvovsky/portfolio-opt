@@ -19,6 +19,7 @@ import quandlreader as qr
 import marketdata as md
 import numpy as np
 
+
 class FinDownloader:
     """
     Historical daily data downloader
@@ -41,8 +42,9 @@ class FinDownloader:
         self.inputfilename  = st.config['downloaders'][source]['inputfilename']
         self.date_format    = st.config['downloaders'][source]['dateFormat']
 
-
     def downloadInstruments(self, symbols, start_date, final_date):
+        if not os.path.exists("downloads"):
+            os.makedirs("downloads")
 
         millis = int(round(time.time() * 1000))
         downloadFileName = '{}.csv'.format(str(millis))
@@ -116,7 +118,6 @@ class FinDownloader:
         newDf.to_csv(self.directory + '/' + downloadFileName)
         print 'instruments download finished'
         return self.directory + '/' + downloadFileName
-
 
     def pivot(self, dataDf, start_date, final_date):
         symbolsArray = dataDf[self.symbolColumn].unique()

@@ -21,7 +21,7 @@ def determineSource(val):
     # source = request.args.get('source')
     defaultDataSource = st.config["efficient_frontier"]["default_datasource"]
     overrideDataSource = st.config["efficient_frontier"]["override_datasource"]
-    print 'dataSource provided=' + val
+    print 'dataSource provided=' + str(val)
     print 'defaultDataSource=' + defaultDataSource
     print 'overrideDataSource=' + str(overrideDataSource)
 
