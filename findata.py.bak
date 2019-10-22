@@ -50,15 +50,15 @@ class FinDownloader:
         downloadFileName = '{}.csv'.format(str(millis))
 
         symbolsArray = symbols.split(',')
-        print(('datasource ={}'.format(self.datasource)))
-        print(('symbolName ={}'.format(self.symbolColumn)))
-        print(('dateColumn ={}'.format(self.dateColumn)))
-        print(('priceColumn={}'.format(self.priceColumn)))
-        print(('date_format={}'.format(self.date_format)))
-        print(('symbols.split={}'.format(symbolsArray)))
-        print(('source={}, start_date={}, final_date={}, downloadFileName={}'.format(self.datasource, start_date,
+        print('datasource ={}'.format(self.datasource))
+        print('symbolName ={}'.format(self.symbolColumn))
+        print('dateColumn ={}'.format(self.dateColumn))
+        print('priceColumn={}'.format(self.priceColumn))
+        print('date_format={}'.format(self.date_format))
+        print('symbols.split={}'.format(symbolsArray))
+        print('source={}, start_date={}, final_date={}, downloadFileName={}'.format(self.datasource, start_date,
                                                                                     final_date,
-                                                                                    downloadFileName)))
+                                                                                    downloadFileName))
 
         session = requests.session()
         session.headers = requests.utils.default_headers()
@@ -88,12 +88,12 @@ class FinDownloader:
         allColumnsOrigDf = downloaders[self.source].read()
         allColumnsNoIndexDf = allColumnsOrigDf.reset_index()
 
-        print(('Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values)))
-        print(('Index from DataReader: {}'.format(allColumnsNoIndexDf.index)))
+        print('Columns list from DataReader: {}'.format(allColumnsNoIndexDf.columns.values))
+        print('Index from DataReader: {}'.format(allColumnsNoIndexDf.index))
         if self.priceColumn in allColumnsNoIndexDf:
             dataDf = allColumnsNoIndexDf[[self.symbolColumn, self.dateColumn, self.priceColumn]]
         else:
-            print(('Column {} doesn''t exist. Trying fallback for using [''Symbol'', ''Date'', ''Close'']'.format(self.priceColumn)))
+            print('Column {} doesn''t exist. Trying fallback for using [''Symbol'', ''Date'', ''Close'']'.format(self.priceColumn))
             dataDf = allColumnsNoIndexDf[['Symbol', 'Date', 'Close']]
         # dataDf.to_csv(downloadDir + '/downloadedInstrumentsOnlyOnePriceColRaw.csv')
         newDf = self.pivot(dataDf, start_date, final_date)
@@ -105,10 +105,10 @@ class FinDownloader:
         newDf = newDf[newDf.index >= earliest_date]
         existing_earliest_date = newDf.index.min()
         # existing_earliest_date = newDf.loc(newDf.index >= earliest_date).index.min()
-        print(('earliest_date = {}, existing_earliest_date = {}'.format(earliest_date, existing_earliest_date)))
+        print('earliest_date = {}, existing_earliest_date = {}'.format(earliest_date, existing_earliest_date))
         cols_to_exclude = newDf.loc[:existing_earliest_date].isnull().all()
         cols_to_keep = ~cols_to_exclude
-        print(('Earliest date to compare: {}'.format(str(existing_earliest_date))))
+        print('Earliest date to compare: {}'.format(str(existing_earliest_date)))
         # print 'Columns to keep: {}'.format(str(cols_to_keep))
         # print 'Columns excluded: {}'.format(str(cols_to_exclude))
         newDf = newDf.loc[:, cols_to_keep]
@@ -133,8 +133,8 @@ class FinDownloader:
             earliest_date = newSymData.index.min()
             # earliest_date = pd.to_datetime(newSymData[self.dateColumn], format=self.date_format, infer_datetime_format=True).min()
             if start_date >= earliest_date:
-                print(('{}.\tAdding sym=\'{}\': required {:%Y-%m-%d} >= earliest {:%Y-%m-%d}' \
-                    .format(i, sym, start_date, earliest_date)))
+                print('{}.\tAdding sym=\'{}\': required {:%Y-%m-%d} >= earliest {:%Y-%m-%d}' \
+                    .format(i, sym, start_date, earliest_date))
 
                 # newSymData.dropna(axis=(0, 1), inplace=True)
                 # newSymData.drop_duplicates(inplace=True)
@@ -143,9 +143,9 @@ class FinDownloader:
                     print('\t\tSkipped as empty')
                 elif len(newSymData.index) < 200:
                     # newSymData.to_csv('downloads/too_short_{}.csv'.format(sym))
-                    print(('\t\tSkipped as too short ({})'.format(len(newSymData.index))))
+                    print('\t\tSkipped as too short ({})'.format(len(newSymData.index)))
                 elif final_date - dt.timedelta(days=7) >= newSymData.index.max():
-                    print(('\t\tSkipped as latest date {} is too far back'.format(newSymData.index.max())))
+                    print('\t\tSkipped as latest date {} is too far back'.format(newSymData.index.max()))
                 else:
                     newSymData.index.names = [self.dateColumn]
                     newSymData.columns = [sym]
@@ -153,19 +153,19 @@ class FinDownloader:
                     newSymData = newSymData[newSymData.index >= start_date]
                     df_list.append(newSymData)
             else:
-                print(('{}.\tSkipped. sym=\'{}\': required {:%Y-%m-%d} < earliest {:%Y-%m-%d}' \
-                    .format(i, sym, start_date, earliest_date)))
+                print('{}.\tSkipped. sym=\'{}\': required {:%Y-%m-%d} < earliest {:%Y-%m-%d}' \
+                    .format(i, sym, start_date, earliest_date))
 
         df_ret = pd.concat(df_list, axis=1, join='outer')
         df_ret.to_csv('downloads/df_before_dropna_tresh.csv')
         df_ret.replace(r'^\s*$', np.nan, regex=True, inplace = True)
         sparseness = df_ret.isnull().sum() / len(df_ret.index)
-        print(('max_sparseness={}, type(max_sparseness)={}'.format(self.max_sparseness, type(self.max_sparseness))))
+        print('max_sparseness={}, type(max_sparseness)={}'.format(self.max_sparseness, type(self.max_sparseness)))
         cols_to_keep = sparseness < self.max_sparseness
         cols_to_drop = ~cols_to_keep
         df_ret = df_ret.loc[:, cols_to_keep]
         print('cols_to_drop:')
-        print((cols_to_drop[cols_to_drop == True]))
+        print(cols_to_drop[cols_to_drop == True])
         df_ret.sort_index(inplace=True)
         df_ret.to_csv('downloads/df_after_dropna_tresh.csv')
         df_ret = df_ret.fillna(method='bfill').fillna(method='ffill')

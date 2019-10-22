@@ -21,9 +21,9 @@ def determineSource(val):
     # source = request.args.get('source')
     defaultDataSource = st.config["efficient_frontier"]["default_datasource"]
     overrideDataSource = st.config["efficient_frontier"]["override_datasource"]
-    print(('dataSource provided=' + str(val)))
-    print(('defaultDataSource=' + defaultDataSource))
-    print(('overrideDataSource=' + str(overrideDataSource)))
+    print('dataSource provided=' + str(val))
+    print('defaultDataSource=' + defaultDataSource)
+    print('overrideDataSource=' + str(overrideDataSource))
 
     retVal = val
     if retVal is None:
@@ -106,7 +106,7 @@ def download():
         return '{{"response":{{"success":"false", "error":"{}"}} }}'.format(str(e))
 
 def uploadcsvGeneric(endPointName, sourceName, calcFunc):
-    print(('Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName)))
+    print('Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName))
     f = request.files['the_file']
     uploadDir = st.config["common"]["upload_directory"]
 
@@ -120,9 +120,9 @@ def determineRiskFree(riskFree):
     print(('request riskfree={}'.format(riskFree)))
     if riskFree is None:
         riskFree = st.config["efficient_frontier"]["default_riskfree"]
-        print(('No riskfree provided in request arguments => take a default value of {}'.format(riskFree)))
+        print('No riskfree provided in request arguments => take a default value of {}'.format(riskFree))
     else:
-        print(('Using provided riskfree = {}'.format(riskFree)))
+        print('Using provided riskfree = {}'.format(riskFree))
 
     return float(riskFree)
 
@@ -130,7 +130,7 @@ def prettyJson(notPretty):
     outDir = 'output'
     if not os.path.exists(outDir):
         os.makedirs(outDir)
-    with open(outDir + '/eff_front.json', 'w') as outfile:
+    with open(outDir + '/lastjson_notpretty.js', 'w') as outfile:
         outfile.write(notPretty)
     notPretty = notPretty.replace('\r\n', '')
     parsed = json.loads(notPretty)
@@ -138,7 +138,6 @@ def prettyJson(notPretty):
     # with open(outDir + '/lastjsonresponse.js', 'w') as outfile:
     #     outfile.write(jsStr)
     return jsStr
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', threaded=True)

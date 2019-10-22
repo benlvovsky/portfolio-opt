@@ -22,5 +22,5 @@ class Quandl():
     def read(self):
         # print quandl.get('ASX/IBV2019', start_date='2018-05-16', end_date='2018-05-16')
         print('-----------------------------')
-        print((quandl.get('ASX/IBV2019', start_date=self.start, end_date=self.end)))
+        print(quandl.get('ASX/IBV2019', start_date=self.start, end_date=self.end))
         sys.exit()

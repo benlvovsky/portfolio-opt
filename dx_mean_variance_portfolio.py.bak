@@ -93,7 +93,7 @@ def sharpeAndCml():
     
 #     efficientPortfolios = getEfficientFrontierPortfolios(port, evols)
 #     print portListToJson(efficientPortfolios)
-    print((effFrontier.toJson()))
+    print(effFrontier.toJson())
 #     print evols
 #     exit(1)
     # 100 points of the effient frontier')
@@ -141,7 +141,7 @@ def sharpeAndCml():
 #     # The **portfolio composition** can be derived as follows.
 #     print 'The **portfolio composition** can be derived as follows.'
 #     port.optimize('Vol', constraint=optr, constraint_type='Exact')
-    print((cpl.toJson()))
+    print(cpl.toJson())
 # 
 #     # Or also in this way.
 #     print 'Or also in this way.'
@@ -167,18 +167,18 @@ def various():
     
     # Since no **portfolio weights** have been provided, the class defaults to equal weights.
     print('default to equal weights.')
-    print((port.get_weights()))
+    print(port.get_weights())
     # defaults to equal weights
    
     # Given these weights you can calculate the **portfolio return** via the method `get_portfolio_return`.
     print('**portfolio return** via the method `get_portfolio_return` for these weights:')
     
-    print((port.get_portfolio_return()))
+    print(port.get_portfolio_return())
     # expected (= historical mean) return
     
     # Analogously, you can call `get_portfolio_variance` to get the historical **portfolio variance**.
     print('`get_portfolio_variance` to get the historical **portfolio variance**')
-    print((port.get_portfolio_variance()))
+    print(port.get_portfolio_variance())
      # expected (= historical) variance
     
     # The class also has a neatly printable `string` representation.

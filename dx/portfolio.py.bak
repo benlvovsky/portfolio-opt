@@ -96,20 +96,20 @@ class mean_variance_portfolio(object):
         '''
         Loads asset values from the web.
         '''
-        print(("load_data: source={}", self.source))
+        print("load_data: source={}", self.source)
 
         self.data = pd.DataFrame()
         # if self.source == 'yahoo' or self.source == 'google':
         accumulatedMsg = ''
-        print(("symbols: {}", self.symbols))
+        print("symbols: {}", self.symbols)
         for sym in self.symbols:
             try:
                 self.data[sym] = web.DataReader(sym, self.source,
                                                 self.start_date,
                                                 self.final_date)['Close']
             except:
-                print(('Can not find data for source %s and symbol %s.'
-                      % (self.source, sym)))
+                print('Can not find data for source %s and symbol %s.'
+                      % (self.source, sym))
                 print('Will try other source.')
                 try:
                     if self.source == 'yahoo':

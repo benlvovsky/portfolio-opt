@@ -82,7 +82,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         elif self.mar_env.get_constant('source') == 'upload1':
             fileName = '{}/{}'.format(st.config["common"]["upload_directory"], st.config["common"]["upload_file_name"])
             self.dfUploadData = pd.read_csv(fileName, parse_dates=['date'])
-            print((self.dfUploadData.columns.values[1:]))
+            print(self.dfUploadData.columns.values[1:])
             self.symbolsDf = self.dfUploadData.columns.values[1:]
             self.mar_env.add_list('symbols', self.symbolsDf)
             self.mar_env.add_constant('final date', dt.datetime.now()) # use arbitraty constant as it is not used for upload
@@ -152,8 +152,8 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         for i in range(1, len(xSegment)-1):
             tangentY = self.calcYforZeroXOfTangent(spl, xSegment[i])
             if tangentY > risklessY:
-                print(('tangentY Found {} at xSegment[{}]={}, len(xSegment) = {}, previous prevTangentY={}' \
-                    .format(tangentY, i, xSegment[i], len(xSegment), prevTangentY)))
+                print('tangentY Found {} at xSegment[{}]={}, len(xSegment) = {}, previous prevTangentY={}' \
+                    .format(tangentY, i, xSegment[i], len(xSegment), prevTangentY))
                 return xSegment[i], tangentY, i
             else:
                 prevTangentY = tangentY
@@ -162,7 +162,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         return xSegment[1], prevTangentY, 1
 
     def get_capital_market_line_bl_1(self, x, y, riskless_asset):
-        print(('len(x)={}'.format(len(x))))
+        print('len(x)={}'.format(len(x)))
         spl = sci.splrep(x,y)   # bl Find the B-spline representation of 1-D curve
 
         (xOpt, yOnZeroX, idx) = self.findXForOptimalTangent(x, spl, riskless_asset)
@@ -229,7 +229,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
         return CPL(self, zero_x, float(opt_return), riskless_asset)
 
     def search_sign_changing_bl(self, l, r, f, d):
-        print(('search_sign_changing_bl: left={}, right={}, d={}'.format(l, r, d)))
+        print('search_sign_changing_bl: left={}, right={}, d={}'.format(l, r, d))
         if d < 0.000001:
             # orig            return (0, 0)
             return (l, r) # bl: if [d] is too small - return what we got so far
@@ -320,7 +320,7 @@ class MeanVariancePortfolio(dx.mean_variance_portfolio):
             print('set index to datetime')
             self.dfUploadData = self.dfUploadData.set_index('date')
             self.data = self.dfUploadData
-            print(('self.data.columns = {}'.format(self.data.columns)))
+            print('self.data.columns = {}'.format(self.data.columns))
             # print 'self.symbolsDf = {}'.format(self.symbolsDf)
             self.data.columns = self.symbolsDf
             # self.data.to_csv('test.csv')

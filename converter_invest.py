@@ -1,6 +1,6 @@
 import pandas as pd
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import requests
 import io
 import ssl

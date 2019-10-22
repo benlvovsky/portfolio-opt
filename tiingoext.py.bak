@@ -18,17 +18,17 @@ class TiingoExt(TiingoDailyReader):
                    'Authorization': 'Token ' + self.api_key}
         headers.update(self.extheaders)
         # print 'headers={}'.format(headers)
-        print(('url={}'.format(url)))
+        print('url={}'.format(url))
         except_to_throw = None
         for i in range(self.retry_count):
             try:
                 out = self._get_response(url, params=params, headers=headers).json()
                 return self._read_lines(out)
             except  requests.exceptions.ConnectionError as e:
-                print(('Exception {}'.format(e)))
+                print('Exception {}'.format(e))
                 except_to_throw = e
 
-        print(('Symbol {} skipped due to exception: {}'.format(except_to_throw)))
+        print('Symbol {} skipped due to exception: {}'.format(except_to_throw))
         return None
 
     # raise except_to_throw

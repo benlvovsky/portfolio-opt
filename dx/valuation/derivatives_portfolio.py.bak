@@ -65,25 +65,25 @@ class derivatives_position(object):
 
     def get_info(self):
         print('NAME')
-        print((self.name, '\n'))
+        print(self.name, '\n')
         print('QUANTITY')
-        print((self.quantity, '\n'))
+        print(self.quantity, '\n')
         print('UNDERLYINGS')
-        print((self.underlyings, '\n'))
+        print(self.underlyings, '\n')
         print('MARKET ENVIRONMENT')
         print('\n**Constants**')
         for key in self.mar_env.constants:
-            print((key, self.mar_env.constants[key]))
+            print(key, self.mar_env.constants[key])
         print('\n**Lists**')
         for key in self.mar_env.lists:
-            print((key, self.mar_env.lists[key]))
+            print(key, self.mar_env.lists[key])
         print('\n**Curves**')
         for key in self.mar_env.curves:
-            print((key, self.mar_env.curves[key]))
+            print(key, self.mar_env.curves[key])
         print('\nOPTION TYPE')
-        print((self.otype, '\n'))
+        print(self.otype, '\n')
         print('PAYOFF FUNCTION')
-        print((self.payoff_func))
+        print(self.payoff_func)
 
 
 otypes = {'European single': valuation_mcs_european_single,
@@ -283,8 +283,8 @@ class derivatives_portfolio(object):
         res_list = []
         if self.parallel is True:
             self.underlying_objects = \
-                simulate_parallel(list(self.underlying_objects.values()))
-            results = value_parallel(list(self.valuation_objects.values()))
+                simulate_parallel(self.underlying_objects.values())
+            results = value_parallel(self.valuation_objects.values())
         # iterate over all positions in portfolio
         for pos in self.valuation_objects:
             pos_list = []
@@ -307,7 +307,7 @@ class derivatives_portfolio(object):
                               columns=['position', 'name', 'quantity',
                                        'otype', 'risk_facts', 'value',
                                        'currency', 'pos_value'])
-        print(('Total\n', res_df[['pos_value']].sum()))
+        print('Total\n', res_df[['pos_value']].sum())
         return res_df
 
     def get_present_values(self, fixed_seed=False):
@@ -315,8 +315,8 @@ class derivatives_portfolio(object):
         present_values = np.zeros(self.val_env.get_constant('paths'))
         if self.parallel is True:
             self.underlying_objects = \
-                simulate_parallel(list(self.underlying_objects.values()))
-            results = value_parallel(list(self.valuation_objects.values()),
+                simulate_parallel(self.underlying_objects.values())
+            results = value_parallel(self.valuation_objects.values(),
                                      full=True)
             for pos in self.valuation_objects:
                 present_values += results[self.valuation_objects[pos].name] \
@@ -335,12 +335,12 @@ class derivatives_portfolio(object):
             fixed_seed = self.fixed_seed
         if self.parallel is True:
             self.underlying_objects = \
-                simulate_parallel(list(self.underlying_objects.values()))
-            results = value_parallel(list(self.valuation_objects.values()),
+                simulate_parallel(self.underlying_objects.values())
+            results = value_parallel(self.valuation_objects.values(),
                                      fixed_seed=fixed_seed)
-            delta_list = greeks_parallel(list(self.valuation_objects.values()),
+            delta_list = greeks_parallel(self.valuation_objects.values(),
                                          Greek='Delta')
-            vega_list = greeks_parallel(list(self.valuation_objects.values()),
+            vega_list = greeks_parallel(self.valuation_objects.values(),
                                         Greek='Vega')
         # iterate over all positions in portfolio
         for pos in self.valuation_objects:
@@ -364,7 +364,7 @@ class derivatives_portfolio(object):
                 # multiple delta and vega values for multi-risk derivatives
                 delta_dict = {}
                 vega_dict = {}
-                for key in list(self.valuation_objects[pos].underlying_objects.keys()):
+                for key in self.valuation_objects[pos].underlying_objects.keys():
                     # delta and vega per position and underlying
                     delta_dict[key] = round(
                         self.valuation_objects[pos].delta(key) *
@@ -395,32 +395,32 @@ class derivatives_portfolio(object):
                                                  'risk_facts', 'value',
                                                  'currency', 'pos_value',
                                                  'pos_delta', 'pos_vega'])
-        print(('Totals\n',
-              res_df[['pos_value', 'pos_delta', 'pos_vega']].sum()))
+        print('Totals\n',
+              res_df[['pos_value', 'pos_delta', 'pos_vega']].sum())
         return res_df
 
     def get_port_risk(self, Greek='Delta', low=0.8, high=1.2, step=0.1,
                       fixed_seed=None, risk_factors=None):
         ''' Calculating portfolio risk statistics. '''
         if risk_factors is None:
-            risk_factors = list(self.underlying_objects.keys())
+            risk_factors = self.underlying_objects.keys()
         if fixed_seed is None:
             fixed_seed = self.fixed_seed
         sensitivities = {}
         levels = np.arange(low, high + 0.01, step)
         if self.parallel is True:
-            values = value_parallel(list(self.valuation_objects.values()),
+            values = value_parallel(self.valuation_objects.values(),
                                     fixed_seed=fixed_seed)
             for key in self.valuation_objects:
                 values[key] *= self.positions[key].quantity
         else:
             values = {}
-            for key, obj in list(self.valuation_objects.items()):
+            for key, obj in self.valuation_objects.items():
                 values[key] = obj.present_value() \
                     * self.positions[key].quantity
         import copy
         for rf in risk_factors:
-            print(('\n' + rf))
+            print('\n' + rf)
             in_val = self.underlying_objects[rf].initial_value
             in_vol = self.underlying_objects[rf].volatility
             results = []
@@ -430,7 +430,7 @@ class derivatives_portfolio(object):
                 if level == 1.0:
                     pass
                 else:
-                    for key, obj in list(self.valuation_objects.items()):
+                    for key, obj in self.valuation_objects.items():
                         if rf in self.positions[key].underlyings:
 
                             if self.positions[key].otype[-5:] == 'multi':
@@ -472,7 +472,7 @@ class derivatives_portfolio(object):
 
             sensitivities[rf + '_' + Greek] = pd.DataFrame(
                 np.array(results), index=levels, columns=['factor', 'value'])
-        print((2 * '\n'))
+        print(2 * '\n')
         return pd.Panel(sensitivities), sum(values.values())
 
     def get_deltas(self, net=True, low=0.9, high=1.1, step=0.05):
@@ -495,7 +495,7 @@ class derivatives_portfolio(object):
 def risk_report(sensitivities, digits=2, gross=True):
     if gross is True:
         for key in sensitivities:
-            print(('\n' + key))
-            print((np.round(sensitivities[key].transpose(), digits)))
+            print('\n' + key)
+            print(np.round(sensitivities[key].transpose(), digits))
     else:
-        print((np.round(sensitivities, digits)))
+        print(np.round(sensitivities, digits))

@@ -170,7 +170,7 @@ class valuation_class_multi(object):
                                                        mar_env, False)
 
     def get_instrument_values(self, fixed_seed=True):
-        for obj in list(self.underlying_objects.values()):
+        for obj in self.underlying_objects.values():
             if obj.instrument_values is None:
                 obj.generate_paths(fixed_seed=fixed_seed)
 
@@ -196,7 +196,7 @@ class valuation_class_multi(object):
             self.strike = strike
         if maturity is not None:
             self.maturity = maturity
-            for underlying in list(underlyings.values()):
+            for underlying in underlyings.values():
                 underlying.update(final_date=self.maturity)
         self.get_instrument_values()
 
@@ -328,7 +328,7 @@ class valuation_mcs_european_multi(valuation_class_multi):
     def generate_payoff(self, fixed_seed=True):
         self.get_instrument_values(fixed_seed=True)
         paths = {key: name.instrument_values for key, name
-                 in list(self.underlying_objects.items())}
+                 in self.underlying_objects.items()}
         time_grid = self.time_grid
         try:
             time_index = np.where(time_grid == self.maturity)[0]
@@ -378,7 +378,7 @@ class valuation_mcs_american_multi(valuation_class_multi):
     def generate_payoff(self, fixed_seed=True):
         self.get_instrument_values(fixed_seed=True)
         self.instrument_values = {key: name.instrument_values for key, name
-                                  in list(self.underlying_objects.items())}
+                                  in self.underlying_objects.items()}
         try:
             time_index_start = int(
                 np.where(self.time_grid == self.pricing_date)[0])
@@ -386,7 +386,7 @@ class valuation_mcs_american_multi(valuation_class_multi):
         except:
             print('Pricing or maturity date not in time grid of underlying.')
         instrument_values = {}
-        for key, obj in list(self.instrument_values.items()):
+        for key, obj in self.instrument_values.items():
             instrument_values[key] = \
                 self.instrument_values[key][
                     time_index_start:time_index_end + 1]
@@ -408,9 +408,9 @@ class valuation_mcs_american_multi(valuation_class_multi):
         for t in range(len(time_list) - 2, 0, -1):
             df = discount_factors[t] / discount_factors[t + 1]
             matrix = {}
-            for asset_1 in list(instrument_values.keys()):
+            for asset_1 in instrument_values.keys():
                 matrix[asset_1] = instrument_values[asset_1][t]
-                for asset_2 in list(instrument_values.keys()):
+                for asset_2 in instrument_values.keys():
                     matrix[asset_1 + asset_2] = instrument_values[asset_1][t] \
                         * instrument_values[asset_2][t]
             rg = sm.OLS(V * df, np.array(list(matrix.values())).T).fit()

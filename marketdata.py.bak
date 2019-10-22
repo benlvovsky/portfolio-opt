@@ -29,7 +29,7 @@ class MarketData():
         dfs = []
         for symbol in self.symbols_array:
             effective_url = self.base_url.format(symbol)
-            print(('symbol={}, effective_url={}'.format(symbol, effective_url)))
+            print('symbol={}, effective_url={}'.format(symbol, effective_url))
             headers = requests.utils.default_headers()
             session = requests.Session()
             # print requests.get(effective_url, timeout=None, verify=True).content #, proxies = {'http': "172.18.0.3:3128", 'https': "172.18.0.3:3128"}).content
