@@ -1,9 +1,0 @@
-sudo apt-get install kubectl
-kubectl get deploy
-kubectl scale --replicas=0 deploy/frontend
-kubectl get deploy
-kubectl scale --replicas=1 deploy/frontend
-kubectl get deploy
-
-gcloud container clusters get-credentials cluster-markowitz --zone us-central1-a --project expanded-run-177512
-kubectl proxy
