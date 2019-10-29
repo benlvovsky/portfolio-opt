@@ -1,11 +1,9 @@
 common: 
-  PGHOST: 'postgres-cont'
-  upload_file_name: 'data.csv'
-  upload_directory: './upload'
-#  upload_type: 'allcolumns'
+  riskfree: 5
+  upload_url: '/Users/ben/dev/stockdownloader/downloads/1571556230718.csv'
 efficient_frontier:
   points_number: 30
-  default_riskfree: 0.04
+  default_riskfree: 0.038
   default_datasource: 'morningstar'
   override_datasource: true
 downloader_morningstar:

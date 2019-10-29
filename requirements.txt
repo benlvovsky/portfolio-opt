@@ -17,3 +17,6 @@ urllib3
 python-dateutil
 ptyprocess
 Cython
+PyPortfolioOpt
+
+scikit-learn

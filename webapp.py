@@ -47,41 +47,42 @@ def efficientFrontier():
     else:
         symbols = request.args.get('symbols').split(",")
 
-    return prettyJson(mark.sharpeAndCml(determineSource(request.args.get('source')), determineRiskFree(request.args.get('riskfree')), symbols))
+    return prettyJson(mark.eff_front(determineSource(request.args.get('source')), determineRiskFree(request.args.get('riskfree')), symbols))
 
 
 @app.route('/upload', methods=['POST'])
 def uploadcsv():
-    return uploadcsvGeneric('/upload', 'upload', mark.sharpeAndCml)
+    return uploadcsvGeneric('/upload', 'upload', mark.eff_front)
 
 
 @app.route('/upload1', methods=['POST'])
 def uploadcsv1():
-    return uploadcsvGeneric('/upload1', 'upload1', mark.sharpeAndCml)
+    return uploadcsvGeneric('/upload1', 'upload1', mark.eff_front)
 
 
 @app.route('/uploadasync', methods=['POST'])
 def uploadasync():
-    return uploadcsvGeneric('/uploadasync', 'upload1', mark.sharpeAndCmlAsync)
+    return uploadcsvGeneric('/uploadasync', 'upload1', mark.eff_front_thread)
 
 
 @app.route('/getasynctaskresult')
 def checkAsyncCompletion():
     uuid = request.args.get('uuid')
     print(('request uuid={}'.format(uuid)))
-    return prettyJson(mark.getAsyncTaskResult(uuid))
+    return prettyJson(mark.task_result(uuid))
 
 
 @app.route('/getlistasynctasks')
 def getlistasynctasks():
-    return prettyJson(mark.getListAsyncTasks())
+    return prettyJson(mark.tasks_list())
 
 
 @app.route('/getasynctaskstatus')
 def getasynctaskstatus():
     uuid = request.args.get('uuid')
     print(('request uuid={}'.format(uuid)))
-    return prettyJson(mark.getAsyncTaskStatus(uuid))
+    return prettyJson(mark.task_status(uuid))
+
 
 @app.route('/download')
 def download():
@@ -105,6 +106,7 @@ def download():
     except Exception as e:
         return '{{"response":{{"success":"false", "error":"{}"}} }}'.format(str(e))
 
+
 def uploadcsvGeneric(endPointName, sourceName, calcFunc):
     print(('Endpoint Name = {}, Source Name = {}'.format(endPointName, sourceName)))
     f = request.files['the_file']
@@ -114,7 +116,8 @@ def uploadcsvGeneric(endPointName, sourceName, calcFunc):
         os.makedirs(uploadDir)
     f.save('{}/{}'.format(uploadDir, st.config["common"]["upload_file_name"]))
 
-    return prettyJson(calcFunc(sourceName, determineRiskFree(request.form.get('riskfree')), []))
+    return prettyJson(calcFunc(determineRiskFree(request.form.get('riskfree')), []))
+
 
 def determineRiskFree(riskFree):
     print(('request riskfree={}'.format(riskFree)))
