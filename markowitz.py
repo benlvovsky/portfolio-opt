@@ -11,6 +11,7 @@ import json
 from optparse import OptionParser
 from datetime import datetime, timedelta
 import pickle
+from collections import OrderedDict
 
 taskDict = {}
 
@@ -51,10 +52,10 @@ def main():
                       help=f'url ({st.config["common"]["upload_url"]})',
                       default=st.config["common"]["upload_url"])
 
-    parser.add_option('-c', '--cache-ef-object-only', dest="to_cache",
+    parser.add_option('-c', '--cache-ef', dest="to_cache",
                       help=f'calculate and cache efficient object only for later use into the parameter filename')
 
-    parser.add_option('-o', '--reuse-cached-ef', dest="reuse_cache",
+    parser.add_option('-o', '--load-ef', dest="reuse_cache",
                       help=f'reuse cached ef object from the parameter filename')
 
     (options, args) = parser.parse_args()
@@ -106,11 +107,17 @@ def calculate_ef(mu, S, options):
     print(f'4. {calc_func}({args}):     {(datetime.now() - now).microseconds}')
     now = datetime.now()
     cleaned_weights = ef.clean_weights()
+    cleaned_0weights = {key: val for key, val in cleaned_weights.items() if val != 0}
+
+    cleaned_weights_sorted_list = sorted(cleaned_0weights.items(), key=lambda x: x[1], reverse=True)
+    print(f'type(cleaned_weights_sorted) = {type(cleaned_weights_sorted_list)}')
+    print(f'{cleaned_weights_sorted_list}')
+
     print(f'5. ef.clean_weights():          {(datetime.now() - now).microseconds}')
     now = datetime.now()
     (mu_, sigma, sharpe) = ef.portfolio_performance(verbose=False, risk_free_rate=options.risk_free)
     print(f'6. ef.portfolio_performance:    {(datetime.now() - now).microseconds}')
-    ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights}
+    ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights_sorted_list}
     return ret_val
 
 

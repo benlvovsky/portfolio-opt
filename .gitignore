@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# serialised objects
+*.ser
+
 # Distribution / packaging
 .Python
 env/
