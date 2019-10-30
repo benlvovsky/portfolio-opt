@@ -9,6 +9,8 @@ from threading import Thread
 import uuid
 import json
 from optparse import OptionParser
+from datetime import datetime, timedelta
+import pickle
 
 taskDict = {}
 
@@ -49,14 +51,27 @@ def main():
                       help=f'url ({st.config["common"]["upload_url"]})',
                       default=st.config["common"]["upload_url"])
 
+    parser.add_option('-c', '--cache-ef-object-only', dest="to_cache",
+                      help=f'calculate and cache efficient object only for later use into the parameter filename')
+
+    parser.add_option('-o', '--reuse-cached-ef', dest="reuse_cache",
+                      help=f'reuse cached ef object from the parameter filename')
+
     (options, args) = parser.parse_args()
 
-    print(f'type of options={type(options)}')
-    print(f'options={options}')
-    print(f'options as dict={options.__dict__}')
+    print(f'options:{options}')
 
-    ret_val = eff_front(options)
-    print(f'json ret_val={json.dumps(ret_val, indent=4, sort_keys=True)}')
+    if options.to_cache:
+        mu, S = calculate_mu_S(options)
+        pickle.dump({'mu': mu, 'S': S}, open(f'{options.to_cache}.ser', "wb"))
+        ret_val = "serialised and saved"
+    elif options.reuse_cache:
+        d = pickle.load(open(f'{options.reuse_cache}.ser', "rb"))
+        ret_val = calculate_ef(d['mu'], d['S'], options)
+    else:
+        ret_val = eff_front(options)
+
+    print(f'eff_front:\n{json.dumps(ret_val, indent=4, sort_keys=True)}')
 
 
 expected_returns_calc_func = {
@@ -75,23 +90,43 @@ portfolio2return_func = {
 
 
 def eff_front(options):
-    # Read in price data
-    df = pd.read_csv(options.url, parse_dates=True, index_col="date")
+    mu, S = calculate_mu_S(options)
+    return calculate_ef(mu, S, options)
 
-    # Calculate expected returns and sample covariance
-    mu = expected_returns_calc_func[options.expected_returns_calc](df)
-    S = risk_models.sample_cov(df)
 
+def calculate_ef(mu, S, options):
     # Optimise for maximal Sharpe ratio
+    now = datetime.now()
     ef = EfficientFrontier(mu, S, weight_bounds=(options.lower_weight_bound, options.higher_weight_bound))
-
+    print(f'3. EfficientFrontier():         {(datetime.now() - now).microseconds}')
+    now = datetime.now()
     calc_func = portfolio2return_func[options.portfolio2return][0]
     args = portfolio2return_func[options.portfolio2return][1](options)
     raw_weights = getattr(ef, calc_func)(**args)
+    print(f'4. {calc_func}({args}):     {(datetime.now() - now).microseconds}')
+    now = datetime.now()
     cleaned_weights = ef.clean_weights()
+    print(f'5. ef.clean_weights():          {(datetime.now() - now).microseconds}')
+    now = datetime.now()
     (mu_, sigma, sharpe) = ef.portfolio_performance(verbose=False, risk_free_rate=options.risk_free)
+    print(f'6. ef.portfolio_performance:    {(datetime.now() - now).microseconds}')
     ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights}
     return ret_val
+
+
+def calculate_mu_S(options):
+    now = datetime.now()
+    # Read in price data
+    df = pd.read_csv(options.url, parse_dates=True, index_col="date")
+    print(f'0. read_csv:                    {(datetime.now() - now).microseconds}')
+    now = datetime.now()
+    # Calculate expected returns and sample covariance
+    mu = expected_returns_calc_func[options.expected_returns_calc](df)
+    print(f'1. expected_returns_calc_func:  {(datetime.now() - now).microseconds}')
+    now = datetime.now()
+    S = risk_models.sample_cov(df)
+    print(f'2. risk_models.sample_cov(df):  {(datetime.now() - now).microseconds}')
+    return mu, S
 
 
 def eff_front_thread(options):
