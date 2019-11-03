@@ -19,3 +19,4 @@ ptyprocess
 Cython
 PyPortfolioOpt
 scikit-learn
+redis

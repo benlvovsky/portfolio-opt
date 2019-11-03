@@ -11,7 +11,8 @@ import json
 from optparse import OptionParser
 from datetime import datetime, timedelta
 import pickle
-from collections import OrderedDict
+import redis
+
 
 taskDict = {}
 
@@ -19,60 +20,84 @@ taskDict = {}
 def main():
     parser = OptionParser()
 
-    parser.add_option('-e', '--expected_returns_calc', dest="expected_returns_calc", type="choice",
+    parser.add_option('-e', '--expected-returns-calc', dest="expected_returns_calc", type="choice",
                       help="calculation type of historical return", choices=['mean', 'exp'], default="mean")
 
-    parser.add_option('-p', '--portfolio_to_return', dest="portfolio2return", type="choice",
+    parser.add_option('-p', '--portfolio-to-return', dest="portfolio2return", type="choice",
                       help="what portfolio to calculate", default="sharpe",
                       choices=['sharpe', 'return', 'volatility'])
 
-    parser.add_option('-f', '--risk_free', dest="risk_free",
+    parser.add_option('-f', '--risk-free', dest="risk_free",
                       help=f'risk free ({st.config["efficient_frontier"]["default_riskfree"]})',
                       default=st.config["efficient_frontier"]["default_riskfree"])
 
-    parser.add_option('-r', '--target_return', dest="target_return",
+    parser.add_option('-r', '--return-target', dest="target_return",
                       help="target_return for minimal volatility calculation",
                       default=None, type="float")
 
-    parser.add_option('-v', '--target_volatility', dest="target_volatility",
+    parser.add_option('-v', '--volatility-target', dest="target_volatility",
                       help="target_volatility for max return",
                       default=None, type="float")
 
-    parser.add_option('-l', '--lower_weight_bound', dest="lower_weight_bound",
+    parser.add_option('-l', '--lower-weight-bound', dest="lower_weight_bound",
                       help="lower weight bound (0)", default=0, type="float")
 
-    parser.add_option('-i', '--higher_weight_bound', dest="higher_weight_bound",
+    parser.add_option('-i', '--higher-weight-bound', dest="higher_weight_bound",
                       help="higher weight bound (1)", default=1, type="float")
 
-    parser.add_option('-n', '--market_neutral', dest="market_neutral",
+    parser.add_option('-n', '--market-neutral', dest="market_neutral",
                       help="market neutral (False)",
                       default=False)
 
-    parser.add_option('-u', '--url', dest="url",
+    parser.add_option('-u', '--url-data-upload', dest="url",
                       help=f'url ({st.config["common"]["upload_url"]})',
                       default=st.config["common"]["upload_url"])
 
-    parser.add_option('-c', '--cache-ef', dest="to_cache",
-                      help=f'calculate and cache efficient object only for later use into the parameter filename')
+    parser.add_option('-c', '--cache-ef', dest="to_cache", default=None,
+                      choices=['redis', 'file', '', None],
+                      help=f'only calculate and cache efficient frontier for later use')
 
-    parser.add_option('-o', '--load-ef', dest="reuse_cache",
+    parser.add_option('-o', '--load-ef', dest="reuse_cache", default=None,
+                      choices=['redis', 'file', '', None],
                       help=f'reuse cached ef object from the parameter filename')
+
+    parser.add_option('-a', '--cache-key', dest="cache_key",
+                      help=f'cache key')
 
     (options, args) = parser.parse_args()
 
     print(f'options:{options}')
 
     if options.to_cache:
+        print(f'using cache {options.to_cache}')
         mu, S = calculate_mu_S(options)
-        pickle.dump({'mu': mu, 'S': S}, open(f'{options.to_cache}.ser', "wb"))
-        ret_val = "serialised and saved"
+        cache_to_save = {'mu': mu, 'S': S}
+        obj_hash = hash(str(cache_to_save))
+        print(f'obj_hash={obj_hash}')
+        if options.to_cache == "redis":
+            conn = redis.Redis('localhost')
+            ser = pickle.dumps(cache_to_save)
+            # print(f'ser={ser}')
+            conn.set(obj_hash, ser)
+        else:
+            pickle.dump(cache_to_save, open(f'{obj_hash}.ser', "wb"))
+        ret_val = {"operation": "saved-to-cache", "hash": obj_hash}
     elif options.reuse_cache:
-        d = pickle.load(open(f'{options.reuse_cache}.ser', "rb"))
-        ret_val = calculate_ef(d['mu'], d['S'], options)
-    else:
-        ret_val = eff_front(options)
+        if options.reuse_cache == "redis":
+            conn = redis.Redis('localhost')
+            ser = conn.get(options.cache_key)
+            cache_to_load = pickle.loads(ser)
+        else:
+            cache_to_load = pickle.load(open(f'{options.cache_key}.ser', "rb"))
 
-    print(f'eff_front:\n{json.dumps(ret_val, indent=4, sort_keys=True)}')
+        # print(f'cache_to_load={cache_to_load}')
+        calced = calculate_ef(cache_to_load['mu'], cache_to_load['S'], options)
+
+        ret_val = {"operation": "efficient-frontier-calculated-using-cache", "efficient-frontier": calced}
+    else:
+        ret_val = {"operation": "efficient-frontier-calculated", "efficient-frontier": calculate_ef(eff_front(options))}
+
+    print(f'response:\n{json.dumps(ret_val, indent=4, sort_keys=False)}')
 
 
 expected_returns_calc_func = {
@@ -110,14 +135,15 @@ def calculate_ef(mu, S, options):
     cleaned_0weights = {key: val for key, val in cleaned_weights.items() if val != 0}
 
     cleaned_weights_sorted_list = sorted(cleaned_0weights.items(), key=lambda x: x[1], reverse=True)
-    print(f'type(cleaned_weights_sorted) = {type(cleaned_weights_sorted_list)}')
-    print(f'{cleaned_weights_sorted_list}')
+    cleaned_weights_sorted_dict = dict(cleaned_weights_sorted_list)
+    # print(f'type(cleaned_weights_sorted) = {type(cleaned_weights_sorted_list)}')
+    # print(f'{cleaned_weights_sorted_dict}')
 
     print(f'5. ef.clean_weights():          {(datetime.now() - now).microseconds}')
     now = datetime.now()
     (mu_, sigma, sharpe) = ef.portfolio_performance(verbose=False, risk_free_rate=options.risk_free)
     print(f'6. ef.portfolio_performance:    {(datetime.now() - now).microseconds}')
-    ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights_sorted_list}
+    ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights_sorted_dict}
     return ret_val
 
 
