@@ -129,8 +129,13 @@ def calculate_all(mu, S, latest_prices, options, description):
     calced = calculate_ef(mu, S, options)
     da = DiscreteAllocation(calced['weights'], latest_prices, total_portfolio_value=options.portfolio_value)
     allocation, leftover = da.lp_portfolio()
-    fa = {"discrete": allocation, "remaining": "${:.2f}".format(leftover)}
-    return {"operation": description, "efficient-frontier": calced, 'portfolio-allocation': fa}
+
+    alloc_list = {}
+    for key, val in allocation.items():
+        alloc_list[key] = {'symbol': key, 'vol': val, 'price': latest_prices[key], 'total': round(val * latest_prices[key], 2)}
+    print(f'alloc_list={alloc_list.values()}')
+    fa = {"portfolio": list(alloc_list.values()), "remaining": "${:.2f}".format(leftover)}
+    return {"operation": description, "efficient-frontier": calced, 'allocation': fa}
 
 
 @deprecated(version='1.2.1', reason="You should use another function. All webapp.py should be migrated")
@@ -141,7 +146,6 @@ def eff_front(options):
 
 
 def calculate_ef(mu, S, options):
-    # Optimise for maximal Sharpe ratio
     now = datetime.now()
     ef = EfficientFrontier(mu, S, weight_bounds=(options.lower_weight_bound, options.higher_weight_bound))
     print(f'3. EfficientFrontier():         {(datetime.now() - now).microseconds} microseconds')
