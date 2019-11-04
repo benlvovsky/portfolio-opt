@@ -20,3 +20,4 @@ Cython
 PyPortfolioOpt
 scikit-learn
 redis
+Deprecated

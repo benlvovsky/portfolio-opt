@@ -14,3 +14,4 @@ from dockerdm folder: `./lcompose.sh up`
 #sample CLI request
 ./markowitz.py
 ./markowitz.py -r 0.25 -l -1 -i 1 -p return -n True
+./markowitz.py -l 0 -i 1 -o redis -k -5899980560828067072
