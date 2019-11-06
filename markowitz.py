@@ -58,7 +58,7 @@ def main():
 
     parser.add_option('-f', '--risk-free', dest="risk_free",
                       help=f'risk free ({st.config["efficient_frontier"]["default_riskfree"]})',
-                      default=st.config["efficient_frontier"]["default_riskfree"])
+                      default=st.config["efficient_frontier"]["default_riskfree"], type="float")
 
     parser.add_option('-r', '--return-target', dest="target_return",
                       help="target_return for minimal volatility calculation",
@@ -86,7 +86,7 @@ def main():
                       choices=['redis', 'file', '', None],
                       help=f'only calculate and cache efficient frontier for later use')
 
-    parser.add_option('-o', '--load-ef', dest="reuse_cache", default=None,
+    parser.add_option('-o', '--reuse-cache', dest="reuse_cache", default=None,
                       choices=['redis', 'file', '', None],
                       help=f'reuse cached ef object from the parameter filename')
 
@@ -122,6 +122,9 @@ def process_options(options):
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
         ret_val = calculate_all(mu, S, latest_prices, options, 'no cache')
+    else:
+        ret_val = {"error": "options do not match. Either use cache result, or reuse cache or -x to calculate all"}
+
     return ret_val
 
 
@@ -132,8 +135,10 @@ def calculate_all(mu, S, latest_prices, options, description):
 
     alloc_list = {}
     for key, val in allocation.items():
-        alloc_list[key] = {'symbol': key, 'vol': val, 'price': latest_prices[key], 'total': round(val * latest_prices[key], 2)}
-    print(f'alloc_list={alloc_list.values()}')
+        if val > 0:
+            alloc_list[key] = {'symbol': key, 'volume': val, 'price': latest_prices[key],
+                               'total': round(val * latest_prices[key], 2)}
+    # print(f'alloc_list={alloc_list.values()}')
     fa = {"portfolio": list(alloc_list.values()), "remaining": "${:.2f}".format(leftover)}
     return {"operation": description, "efficient-frontier": calced, 'allocation': fa}
 

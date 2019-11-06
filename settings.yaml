@@ -1,79 +1,10 @@
 common: 
-  riskfree: 5
-  upload_url: '/Users/ben/dev/stockdownloader/downloads/1571556230718_testing.csv'
-  cache_provider: redis
+  upload_url: '/Users/ben/dev/stockdownloader/downloads/1572993457549_backtofuture_3yearsback.csv'
+#  upload_url: '/Users/ben/dev/stockdownloader/downloads/1572993457549_backtofuture_2yearsback.csv'
+#  upload_url: '/Users/ben/dev/stockdownloader/downloads/1572993457549_backtofuture.csv'
   cache_provider_port: 6379
   portfolio_value: 100000
 efficient_frontier:
   points_number: 30
   default_riskfree: 0.038
   default_datasource: 'morningstar'
-  override_datasource: true
-downloader_morningstar:
-  datasource:   'morningstar'
-  symbolColumn: 'Symbol'
-  dateColumn:   'Date'
-  priceColumn:  'Close'
-  directory:    'downloads'
-
-downloader:
-  activesource:   'tiingo'
-  dateFormat:     '%Y-%m-%d'
-  startDate:      '2010-12-31'
-  endDate:        '2019-09-19'
-#  symbols:        'AAPL,GOOGL,GOOG'
-  symbols:        'AAPL,GOOGL,GOOG,MSFT,AMZN,FB,INTC,CSCO,CMCSA,PEP,AMGN,NVDA,TXN,AVGO,GILD,QCOM,KHC,PYPL,PCLN,ADBE,NFLX,CHTR,CELG,COST,SBUX,WBA,BIIB,BIDU,AABA,MDLZ,QQQ,AMAT,AMOV,TSLA,TMUS,MU,ADP,CSX,CME,MAR,ATVI,FOXA,ISRG,ESRX,REGN,CTSH,EBAY,INTU,JD,NXPI,VRTX,MNST,EQIX,EA,ADI,ILMN,LRCX,ROST,LBTYA,LBTYB,AMTD,LBTYK,ALXN,FISV,PCAR,NTES,DLTR,TROW,AAL,PAYX,WDC,IBKR,XEL,ADSK,SIRI,MYL,DISH,CERN,NTRS,WDAY,HBANO,VCSH,ORLY,FITB,MCHP,CTRP,INCY,PFG,WLTW,SBAC,EXPE,VCIT,ALGN,SWKS,INFO,DVY,SYMC,PFF,CHKP,XLNX,CTAS,KLAC,WYNN,LBRDK,LBRDA,BMRN,HBAN,VRSK,FAST,XRAY,NTAP,MXIM,ULTA,VOD,MELI,IDXX,CA,CBOE,VIA,ETFC,CTXS,ALNY,LSXMK,TTWO,SNPS,NDAQ,ASML,ANSS,LKQ,JBHT,FANG,NCLH,IPGP,SIVB,CHRW,SPLK,STX,EMB,CDNS,HOLX,CINF,MBB,SHPG,TEAM,ACGL,EXPD,CSJ,HAS,SEIC,MRVL,HSIC,GRMN,SHY,SNI,AKAM,AMD,YNDX,CSGP,ODFL,CGNX,CDW,VRSN,IAC,QVCA,RYAAY,STLD,SCZ,LULU,TRMB,VXUS,QVCB,VIAB,IBB,ZION,CPRT,NWS,FLEX,CDK,ON,NWSA,DOX,TSCO,EXEL,IEP,OTEX,DISCB,NKTR,AGNCB,JKHY,ACWI,EWBC,CZR,MTCH,QRVO,ABMD,NDSN,ALKS,DISCA,IXUS,OLED,SSNC,FFIV,JAZZ,BLUE,SGEN,DISCK,Z,ZG,BNDX,CG,SHV,FWONK,GT,SINA,FTNT,GLPI,IEF,SBNY,CIU,AGNC,MIDD,MKTX,PPC,WB,UHAL,COHR,HDS,NBIX,FSLR,COMM,QGEN'
-#  symbols:        'FSLR,COMM,FOX,'
-
-downloaders:
-  tiingo:
-    datasource:   'tiingo'
-    maxSparseness:  0.05
-    symbolColumn: 'symbol'
-    dateColumn:   'date'
-    dateFormat:   '%Y-%m-%d'
-    priceColumn:  'close'
-    directory:    'downloads'
-    inputfilename: 'upload/a.txt'
-    access_key:   'b52aff4cd1d604991702bf6bec5151924323ac4a'
-  quandl:
-    datasource:   'quandl'
-    maxSparseness:  0.05
-    symbolColumn: 'symbol'
-    dateColumn:   'date'
-    dateFormat:   '%Y%m%d'
-    priceColumn:  'adjClose'
-    directory:    'downloads'
-    inputfilename: 'upload/a.txt'
-    access_key:   'KtxeUhoJZDsmvsmhVsWf'
-  marketdata:
-    datasource:   'marketdata'
-    maxSparseness:  0.05
-    symbolColumn: 'symbol'
-    dateColumn:   'date'
-    dateFormat:   '%Y%m%d'
-    priceColumn:  'adjClose'
-    inputfilename: 'upload/a.txt'
-    directory:    'downloads'
-    inputfilename: 'upload/a.txt'
-    access_key:   ''
-  converter_invest:
-    datasource:   'converter_invest'
-    maxSparseness:  0.05
-    symbolColumn: 'symbol'
-    dateColumn:   'date'
-    dateFormat:   '%b %d, %Y'
-    priceColumn:  'close'
-    directory:    'downloads'
-    inputfilename: 'upload/b.txt'
-    access_key:   ''
-  converter_asxhist:
-    datasource:   'converter_asxhist'
-    maxSparseness:  0.05
-    symbolColumn: 'symbol'
-    dateColumn:   'date'
-    dateFormat:   '%Y%m%d'
-    priceColumn:  'close'
-    directory:    'downloads'
-    inputfilename: 'upload/a.txt'
-    access_key:   ''
