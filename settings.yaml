@@ -1,7 +1,5 @@
 common: 
-  upload_url: '/Users/ben/dev/stockdownloader/downloads/1572993457549_backtofuture_3yearsback.csv'
-#  upload_url: '/Users/ben/dev/stockdownloader/downloads/1572993457549_backtofuture_2yearsback.csv'
-#  upload_url: '/Users/ben/dev/stockdownloader/downloads/1572993457549_backtofuture.csv'
+  upload_url: '/Users/ben/dev/stockdownloader/downloads/1573083800216.csv'
   cache_provider_port: 6379
   portfolio_value: 100000
 efficient_frontier:

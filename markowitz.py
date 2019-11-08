@@ -98,6 +98,22 @@ def main():
     parser.add_option('-a', '--allocation-portfolio-value', dest="portfolio_value", help=f'allocation portfolio value',
                       default=st.config["common"]["portfolio_value"], type="float")
 
+    parser.add_option('-y', '--portfolio-min-allocation', dest="min_allocation",
+                      help=f'min allocation for portfolio Discrete Allocation (0.01)',
+                      default=0.01, type="float")
+
+    parser.add_option('-w', '--min-value-per-instrument', dest="min_value",
+                      help=f'min investment value per instrument in $ (1)',
+                      default=1, type="float")
+
+    parser.add_option('-z', '--allocation-cutoff', dest="allocation_cutoff",
+                      help=f'allocation cutoff for Discrete Allocation',
+                      default=1e-4, type="float")
+
+    parser.add_option('-g', '--gamma', dest="gamma",
+                      help=f'gamma L2 Regularisation. Adds a penalty (parameterised by gamma) on small weights',
+                      default=0, type="float")
+
     (options, args) = parser.parse_args()
 
     print(f'options:{options}')
@@ -130,14 +146,16 @@ def process_options(options):
 
 def calculate_all(mu, S, latest_prices, options, description):
     calced = calculate_ef(mu, S, options)
-    da = DiscreteAllocation(calced['weights'], latest_prices, total_portfolio_value=options.portfolio_value)
+    da = DiscreteAllocation(calced['weights'], latest_prices, total_portfolio_value=options.portfolio_value,
+                            min_allocation=options.min_allocation)
+    # allocation, leftover = da.greedy_portfolio()
     allocation, leftover = da.lp_portfolio()
 
     alloc_list = {}
     for key, val in allocation.items():
-        if val > 0:
-            alloc_list[key] = {'symbol': key, 'volume': val, 'price': latest_prices[key],
-                               'total': round(val * latest_prices[key], 2)}
+        if abs(val * latest_prices[key]) >= options.min_value:
+            alloc_list[key] = {'symbol': key, 'quantity': val, 'price': latest_prices[key],
+                               'total': round(val * latest_prices[key], 4)}
     # print(f'alloc_list={alloc_list.values()}')
     fa = {"portfolio": list(alloc_list.values()), "remaining": "${:.2f}".format(leftover)}
     return {"operation": description, "efficient-frontier": calced, 'allocation': fa}
@@ -160,7 +178,7 @@ def calculate_ef(mu, S, options):
     raw_weights = getattr(ef, calc_func)(**args)
     print(f'4. {calc_func}({args}):     {(datetime.now() - now).microseconds} microseconds')
     now = datetime.now()
-    cleaned_weights = ef.clean_weights()
+    cleaned_weights = ef.clean_weights(cutoff=options.allocation_cutoff)
     cleaned_0weights = {key: val for key, val in cleaned_weights.items() if val != 0}
 
     cleaned_weights_sorted_list = sorted(cleaned_0weights.items(), key=lambda x: x[1], reverse=True)
