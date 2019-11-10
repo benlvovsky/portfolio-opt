@@ -74,7 +74,7 @@ def main():
     parser.add_option('-i', '--higher-weight-bound', dest="higher_weight_bound",
                       help="higher weight bound (1)", default=1, type="float")
 
-    parser.add_option('-n', '--market-neutral', dest="market_neutral",
+    parser.add_option('-n', '--market-neutral', dest="market_neutral", action="store_true",
                       help="market neutral (False)",
                       default=False)
 
@@ -127,13 +127,13 @@ def process_options(options):
     if options.to_cache:
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
-        cache_to_save = {'mu': mu, 'S': S, 'latest_prices': latest_prices}
+        cache_to_save = {'mu': mu, 'S': S, 'latest_prices': latest_prices, 'url': options.url}
         store_cache_func[options.to_cache](cache_to_save)
         ret_val = {"operation": "saved-to-cache", "hash": hash(str(cache_to_save))}
     elif options.reuse_cache:
         cache_loaded = load_cache_func[options.reuse_cache](options.cache_key)
         ret_val = calculate_all(cache_loaded['mu'], cache_loaded['S'], cache_loaded['latest_prices'],
-                                options, f'using cache {options.reuse_cache}')
+                                options, f'using cache {options.reuse_cache}, url {options.url}')
     elif options.no_cache_calculation:
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
@@ -168,6 +168,21 @@ def eff_front(options):
     return calculate_ef(mu, S, options), latest_prices
 
 
+def calculate_mu_S(options):
+    now = datetime.now()
+    # Read in price data
+    df = pd.read_csv(options.url, parse_dates=True, index_col="date")
+    print(f'0. read_csv:                    {(datetime.now() - now).microseconds} microseconds')
+    now = datetime.now()
+    # Calculate expected returns and sample covariance
+    mu = expected_returns_calc_func[options.expected_returns_calc](df)
+    print(f'1. expected_returns_calc_func:  {(datetime.now() - now).microseconds} microseconds')
+    now = datetime.now()
+    S = risk_models.sample_cov(df)
+    print(f'2. risk_models.sample_cov(df):  {(datetime.now() - now).microseconds} microseconds')
+    return mu, S, df
+
+
 def calculate_ef(mu, S, options):
     now = datetime.now()
     ef = EfficientFrontier(mu, S, weight_bounds=(options.lower_weight_bound, options.higher_weight_bound))
@@ -191,21 +206,6 @@ def calculate_ef(mu, S, options):
     ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights_sorted_dict}
 
     return ret_val
-
-
-def calculate_mu_S(options):
-    now = datetime.now()
-    # Read in price data
-    df = pd.read_csv(options.url, parse_dates=True, index_col="date")
-    print(f'0. read_csv:                    {(datetime.now() - now).microseconds} microseconds')
-    now = datetime.now()
-    # Calculate expected returns and sample covariance
-    mu = expected_returns_calc_func[options.expected_returns_calc](df)
-    print(f'1. expected_returns_calc_func:  {(datetime.now() - now).microseconds} microseconds')
-    now = datetime.now()
-    S = risk_models.sample_cov(df)
-    print(f'2. risk_models.sample_cov(df):  {(datetime.now() - now).microseconds} microseconds')
-    return mu, S, df
 
 
 def eff_front_thread(options):
