@@ -40,8 +40,9 @@ portfolio2return_func = {
     "sharpe": ("max_sharpe", lambda options: dict(risk_free_rate=options.risk_free)),
     "return": ("efficient_return", lambda options: dict(target_return=options.target_return,
                                                         market_neutral=options.market_neutral)),
-    "volatility": ("efficient_risk",
-                   lambda options: dict(target_risk=options.target_volatility, risk_free_rate=options.risk_free))
+    "volatility": ("efficient_risk", lambda options: dict(target_risk=options.target_volatility,
+                                                          risk_free_rate=options.risk_free,
+                                                          market_neutral=options.market_neutral))
 }
 
 
@@ -92,27 +93,30 @@ def main():
 
     parser.add_option('-k', '--cache-key', dest="cache_key", help=f'cache key')
 
-    parser.add_option('-x', '--no-cache-calc', action="store_true", dest="no_cache_calculation",
-                      help=f'no cache calculation', default=False)
-
     parser.add_option('-a', '--allocation-portfolio-value', dest="portfolio_value", help=f'allocation portfolio value',
                       default=st.config["common"]["portfolio_value"], type="float")
+
+    parser.add_option('-g', '--gamma', dest="gamma",
+                      help=f'gamma L2 Regularisation. Adds a penalty (parameterised by gamma) on small weights',
+                      default=0, type="float")
+
+    parser.add_option('-w', '--min-value-per-instrument', dest="min_value",
+                      help=f'min investment value per instrument in $ (None)',
+                      default=None, type="float")
+
+    parser.add_option('-s', '--invert-returns', dest="invert_returns",
+                      help=f'invert returns (for short portfolios)', default=False)
+
+    parser.add_option('-x', '--no-cache-calc', action="store_true", dest="no_cache_calculation",
+                      help=f'no cache calculation', default=False)
 
     parser.add_option('-y', '--portfolio-min-allocation', dest="min_allocation",
                       help=f'min allocation for portfolio Discrete Allocation (0.01)',
                       default=0.01, type="float")
 
-    parser.add_option('-w', '--min-value-per-instrument', dest="min_value",
-                      help=f'min investment value per instrument in $ (1)',
-                      default=1, type="float")
-
     parser.add_option('-z', '--allocation-cutoff', dest="allocation_cutoff",
                       help=f'allocation cutoff for Discrete Allocation',
                       default=1e-4, type="float")
-
-    parser.add_option('-g', '--gamma', dest="gamma",
-                      help=f'gamma L2 Regularisation. Adds a penalty (parameterised by gamma) on small weights',
-                      default=0, type="float")
 
     (options, args) = parser.parse_args()
 
@@ -124,7 +128,10 @@ def main():
 
 
 def process_options(options):
-    if options.to_cache:
+    if options.invert_returns:
+        short_fix(options)
+        ret_val = {"operation": "invert-returns", "filename": options.invert_returns}
+    elif options.to_cache:
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
         cache_to_save = {'mu': mu, 'S': S, 'latest_prices': latest_prices, 'url': options.url}
@@ -132,8 +139,9 @@ def process_options(options):
         ret_val = {"operation": "saved-to-cache", "hash": hash(str(cache_to_save))}
     elif options.reuse_cache:
         cache_loaded = load_cache_func[options.reuse_cache](options.cache_key)
-        ret_val = calculate_all(cache_loaded['mu'], cache_loaded['S'], cache_loaded['latest_prices'],
-                                options, f'using cache {options.reuse_cache}, url {options.url}')
+        description = f'using cache {options.reuse_cache}, url {cache_loaded["url"]}'
+        ret_val = calculate_all(cache_loaded['mu'], cache_loaded['S'], cache_loaded['latest_prices'], options,
+                                description)
     elif options.no_cache_calculation:
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
@@ -142,6 +150,18 @@ def process_options(options):
         ret_val = {"error": "options do not match. Either use cache result, or reuse cache or -x to calculate all"}
 
     return ret_val
+
+
+def short_fix(options):
+    df = pd.read_csv(options.url)
+    new_df = pd.DataFrame()
+    new_df['date'] = df['date']
+    for column in df:
+        if column != 'date':
+            new_df[column] = -df[column]
+
+    new_df = new_df.set_index('date')
+    new_df.to_csv(options.invert_returns)
 
 
 def calculate_all(mu, S, latest_prices, options, description):
@@ -153,7 +173,7 @@ def calculate_all(mu, S, latest_prices, options, description):
 
     alloc_list = {}
     for key, val in allocation.items():
-        if abs(val * latest_prices[key]) >= options.min_value:
+        if options.min_value is None or abs(val * latest_prices[key]) >= options.min_value:
             alloc_list[key] = {'symbol': key, 'quantity': val, 'price': latest_prices[key],
                                'total': round(val * latest_prices[key], 4)}
     # print(f'alloc_list={alloc_list.values()}')
@@ -172,7 +192,7 @@ def calculate_mu_S(options):
     now = datetime.now()
     # Read in price data
     df = pd.read_csv(options.url, parse_dates=True, index_col="date")
-    print(f'0. read_csv:                    {(datetime.now() - now).microseconds} microseconds')
+    print(f'0. read_csv (with negation):    {(datetime.now() - now).microseconds} microseconds')
     now = datetime.now()
     # Calculate expected returns and sample covariance
     mu = expected_returns_calc_func[options.expected_returns_calc](df)
