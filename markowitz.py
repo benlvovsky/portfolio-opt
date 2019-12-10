@@ -14,9 +14,12 @@ from datetime import datetime
 import pickle
 import redis
 from deprecated import deprecated
+from dateutil.relativedelta import relativedelta
 
 taskDict = {}
 
+back_to_future = False
+back_to_future_latest_prices = None
 
 load_cache_func = {
     'redis': lambda cache_key: pickle.loads(redis.Redis('localhost').get(cache_key)),
@@ -118,6 +121,10 @@ def main():
                       help=f'allocation cutoff for Discrete Allocation',
                       default=1e-4, type="float")
 
+    parser.add_option('-b', '--back-to-future-test', action="store_true", dest="back_to_future",
+                      help=f'"back to future" test',
+                      default=False)
+
     (options, args) = parser.parse_args()
 
     print(f'options:{options}')
@@ -128,6 +135,9 @@ def main():
 
 
 def process_options(options):
+    global back_to_future
+    back_to_future = options.back_to_future
+
     if options.invert_returns:
         short_fix(options)
         ret_val = {"operation": "invert-returns", "filename": options.invert_returns}
@@ -165,6 +175,7 @@ def short_fix(options):
 
 
 def calculate_all(mu, S, latest_prices, options, description):
+    back_to_future_total = 0
     calced = calculate_ef(mu, S, options)
     da = DiscreteAllocation(calced['weights'], latest_prices, total_portfolio_value=options.portfolio_value,
                             min_allocation=options.min_allocation)
@@ -176,9 +187,16 @@ def calculate_all(mu, S, latest_prices, options, description):
         if options.min_value is None or abs(val * latest_prices[key]) >= options.min_value:
             alloc_list[key] = {'symbol': key, 'quantity': val, 'price': latest_prices[key],
                                'total': round(val * latest_prices[key], 4)}
+            if back_to_future:
+                alloc_list[key]['back_to_future_return'] = (back_to_future_latest_prices[key] - latest_prices[key])*val
+                back_to_future_total += alloc_list[key]['back_to_future_return']
     # print(f'alloc_list={alloc_list.values()}')
     fa = {"portfolio": list(alloc_list.values()), "remaining": "${:.2f}".format(leftover)}
-    return {"operation": description, "efficient-frontier": calced, 'allocation': fa}
+    ret_val = {"operation": description, "efficient-frontier": calced, 'allocation': fa}
+    if back_to_future:
+        ret_val['back_to_future_total'] = back_to_future_total
+        ret_val['back_to_future_percent'] = back_to_future_total/options.portfolio_value
+    return ret_val
 
 
 @deprecated(version='1.2.1', reason="You should use another function. All webapp.py should be migrated")
@@ -192,6 +210,12 @@ def calculate_mu_S(options):
     now = datetime.now()
     # Read in price data
     df = pd.read_csv(options.url, parse_dates=True, index_col="date")
+    if back_to_future:
+        global back_to_future_latest_prices
+        back_to_future_latest_prices = get_latest_prices(df)
+        last_date = df.index[-1]
+        df = df[df.index < last_date - relativedelta(years=1)]
+
     print(f'0. read_csv (with negation):    {(datetime.now() - now).microseconds} microseconds')
     now = datetime.now()
     # Calculate expected returns and sample covariance
