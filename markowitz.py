@@ -14,9 +14,12 @@ from datetime import datetime
 import pickle
 import redis
 from deprecated import deprecated
+from dateutil.relativedelta import relativedelta
 
 taskDict = {}
 
+back_to_future = False
+back_to_future_latest_prices = None
 
 load_cache_func = {
     'redis': lambda cache_key: pickle.loads(redis.Redis('localhost').get(cache_key)),
@@ -40,8 +43,9 @@ portfolio2return_func = {
     "sharpe": ("max_sharpe", lambda options: dict(risk_free_rate=options.risk_free)),
     "return": ("efficient_return", lambda options: dict(target_return=options.target_return,
                                                         market_neutral=options.market_neutral)),
-    "volatility": ("efficient_risk",
-                   lambda options: dict(target_risk=options.target_volatility, risk_free_rate=options.risk_free))
+    "volatility": ("efficient_risk", lambda options: dict(target_risk=options.target_volatility,
+                                                          risk_free_rate=options.risk_free,
+                                                          market_neutral=options.market_neutral))
 }
 
 
@@ -74,7 +78,7 @@ def main():
     parser.add_option('-i', '--higher-weight-bound', dest="higher_weight_bound",
                       help="higher weight bound (1)", default=1, type="float")
 
-    parser.add_option('-n', '--market-neutral', dest="market_neutral",
+    parser.add_option('-n', '--market-neutral', dest="market_neutral", action="store_true",
                       help="market neutral (False)",
                       default=False)
 
@@ -92,11 +96,34 @@ def main():
 
     parser.add_option('-k', '--cache-key', dest="cache_key", help=f'cache key')
 
+    parser.add_option('-a', '--allocation-portfolio-value', dest="portfolio_value", help=f'allocation portfolio value',
+                      default=st.config["common"]["portfolio_value"], type="float")
+
+    parser.add_option('-g', '--gamma', dest="gamma",
+                      help=f'gamma L2 Regularisation. Adds a penalty (parameterised by gamma) on small weights',
+                      default=0, type="float")
+
+    parser.add_option('-w', '--min-value-per-instrument', dest="min_value",
+                      help=f'min investment value per instrument in $ (None)',
+                      default=None, type="float")
+
+    parser.add_option('-s', '--invert-returns', dest="invert_returns",
+                      help=f'invert returns (for short portfolios)', default=False)
+
     parser.add_option('-x', '--no-cache-calc', action="store_true", dest="no_cache_calculation",
                       help=f'no cache calculation', default=False)
 
-    parser.add_option('-a', '--allocation-portfolio-value', dest="portfolio_value", help=f'allocation portfolio value',
-                      default=st.config["common"]["portfolio_value"], type="float")
+    parser.add_option('-y', '--portfolio-min-allocation', dest="min_allocation",
+                      help=f'min allocation for portfolio Discrete Allocation (0.01)',
+                      default=0.01, type="float")
+
+    parser.add_option('-z', '--allocation-cutoff', dest="allocation_cutoff",
+                      help=f'allocation cutoff for Discrete Allocation',
+                      default=1e-4, type="float")
+
+    parser.add_option('-b', '--back-to-future-test', action="store_true", dest="back_to_future",
+                      help=f'"back to future" test',
+                      default=False)
 
     (options, args) = parser.parse_args()
 
@@ -108,16 +135,23 @@ def main():
 
 
 def process_options(options):
-    if options.to_cache:
+    global back_to_future
+    back_to_future = options.back_to_future
+
+    if options.invert_returns:
+        short_fix(options)
+        ret_val = {"operation": "invert-returns", "filename": options.invert_returns}
+    elif options.to_cache:
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
-        cache_to_save = {'mu': mu, 'S': S, 'latest_prices': latest_prices}
+        cache_to_save = {'mu': mu, 'S': S, 'latest_prices': latest_prices, 'url': options.url}
         store_cache_func[options.to_cache](cache_to_save)
         ret_val = {"operation": "saved-to-cache", "hash": hash(str(cache_to_save))}
     elif options.reuse_cache:
         cache_loaded = load_cache_func[options.reuse_cache](options.cache_key)
-        ret_val = calculate_all(cache_loaded['mu'], cache_loaded['S'], cache_loaded['latest_prices'],
-                                options, f'using cache {options.reuse_cache}')
+        description = f'using cache {options.reuse_cache}, url {cache_loaded["url"]}'
+        ret_val = calculate_all(cache_loaded['mu'], cache_loaded['S'], cache_loaded['latest_prices'], options,
+                                description)
     elif options.no_cache_calculation:
         mu, S, df = calculate_mu_S(options)
         latest_prices = get_latest_prices(df)
@@ -128,19 +162,41 @@ def process_options(options):
     return ret_val
 
 
+def short_fix(options):
+    df = pd.read_csv(options.url)
+    new_df = pd.DataFrame()
+    new_df['date'] = df['date']
+    for column in df:
+        if column != 'date':
+            new_df[column] = -df[column]
+
+    new_df = new_df.set_index('date')
+    new_df.to_csv(options.invert_returns)
+
+
 def calculate_all(mu, S, latest_prices, options, description):
+    back_to_future_total = 0
     calced = calculate_ef(mu, S, options)
-    da = DiscreteAllocation(calced['weights'], latest_prices, total_portfolio_value=options.portfolio_value)
+    da = DiscreteAllocation(calced['weights'], latest_prices, total_portfolio_value=options.portfolio_value,
+                            min_allocation=options.min_allocation)
+    # allocation, leftover = da.greedy_portfolio()
     allocation, leftover = da.lp_portfolio()
 
     alloc_list = {}
     for key, val in allocation.items():
-        if val > 0:
-            alloc_list[key] = {'symbol': key, 'volume': val, 'price': latest_prices[key],
-                               'total': round(val * latest_prices[key], 2)}
+        if options.min_value is None or abs(val * latest_prices[key]) >= options.min_value:
+            alloc_list[key] = {'symbol': key, 'quantity': val, 'price': latest_prices[key],
+                               'total': round(val * latest_prices[key], 4)}
+            if back_to_future:
+                alloc_list[key]['back_to_future_return'] = (back_to_future_latest_prices[key] - latest_prices[key])*val
+                back_to_future_total += alloc_list[key]['back_to_future_return']
     # print(f'alloc_list={alloc_list.values()}')
     fa = {"portfolio": list(alloc_list.values()), "remaining": "${:.2f}".format(leftover)}
-    return {"operation": description, "efficient-frontier": calced, 'allocation': fa}
+    ret_val = {"operation": description, "efficient-frontier": calced, 'allocation': fa}
+    if back_to_future:
+        ret_val['back_to_future_total'] = back_to_future_total
+        ret_val['back_to_future_percent'] = back_to_future_total/options.portfolio_value
+    return ret_val
 
 
 @deprecated(version='1.2.1', reason="You should use another function. All webapp.py should be migrated")
@@ -148,6 +204,27 @@ def eff_front(options):
     mu, S, df = calculate_mu_S(options)
     latest_prices = get_latest_prices(df)
     return calculate_ef(mu, S, options), latest_prices
+
+
+def calculate_mu_S(options):
+    now = datetime.now()
+    # Read in price data
+    df = pd.read_csv(options.url, parse_dates=True, index_col="date")
+    if back_to_future:
+        global back_to_future_latest_prices
+        back_to_future_latest_prices = get_latest_prices(df)
+        last_date = df.index[-1]
+        df = df[df.index < last_date - relativedelta(years=1)]
+
+    print(f'0. read_csv (with negation):    {(datetime.now() - now).microseconds} microseconds')
+    now = datetime.now()
+    # Calculate expected returns and sample covariance
+    mu = expected_returns_calc_func[options.expected_returns_calc](df)
+    print(f'1. expected_returns_calc_func:  {(datetime.now() - now).microseconds} microseconds')
+    now = datetime.now()
+    S = risk_models.sample_cov(df)
+    print(f'2. risk_models.sample_cov(df):  {(datetime.now() - now).microseconds} microseconds')
+    return mu, S, df
 
 
 def calculate_ef(mu, S, options):
@@ -160,7 +237,7 @@ def calculate_ef(mu, S, options):
     raw_weights = getattr(ef, calc_func)(**args)
     print(f'4. {calc_func}({args}):     {(datetime.now() - now).microseconds} microseconds')
     now = datetime.now()
-    cleaned_weights = ef.clean_weights()
+    cleaned_weights = ef.clean_weights(cutoff=options.allocation_cutoff)
     cleaned_0weights = {key: val for key, val in cleaned_weights.items() if val != 0}
 
     cleaned_weights_sorted_list = sorted(cleaned_0weights.items(), key=lambda x: x[1], reverse=True)
@@ -173,21 +250,6 @@ def calculate_ef(mu, S, options):
     ret_val = {'return': mu_, 'volatility': sigma, 'sharpe': sharpe, 'weights': cleaned_weights_sorted_dict}
 
     return ret_val
-
-
-def calculate_mu_S(options):
-    now = datetime.now()
-    # Read in price data
-    df = pd.read_csv(options.url, parse_dates=True, index_col="date")
-    print(f'0. read_csv:                    {(datetime.now() - now).microseconds} microseconds')
-    now = datetime.now()
-    # Calculate expected returns and sample covariance
-    mu = expected_returns_calc_func[options.expected_returns_calc](df)
-    print(f'1. expected_returns_calc_func:  {(datetime.now() - now).microseconds} microseconds')
-    now = datetime.now()
-    S = risk_models.sample_cov(df)
-    print(f'2. risk_models.sample_cov(df):  {(datetime.now() - now).microseconds} microseconds')
-    return mu, S, df
 
 
 def eff_front_thread(options):

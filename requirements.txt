@@ -21,3 +21,4 @@ PyPortfolioOpt
 scikit-learn
 redis
 Deprecated
+python-dateutil
