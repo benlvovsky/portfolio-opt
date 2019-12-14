@@ -8,10 +8,47 @@ import pandas as pd
 from datetime import datetime
 import pickle
 import redis
+from uuid import uuid4
 
 
 def get_portfolio(request):
     return process_options(json.loads(request.data))
+
+
+def get_portfolio_point(request):
+    data = json.loads(request.data)
+    portfolio = process_options(data)
+    ef = portfolio['efficient-frontier']
+    weights = ef['weights']
+    weights_list = [{'symbol': symbol, 'weight': weight} for symbol, weight in weights.items()]
+    portfolio_ret = portfolio['allocation']['portfolio']
+    for i in range(0, len(portfolio_ret)):
+        symbol = portfolio_ret[i]['symbol']
+        for weight in weights_list:
+            if weight['symbol'] == symbol:
+                portfolio_ret[i]['weight'] = weight['weight']
+                weight['volume'] = portfolio_ret[i]['volume']
+                weight['price'] = portfolio_ret[i]['price']
+                weight['total'] = portfolio_ret[i]['total']
+    return {
+        'point': {
+            "return": ef['return'],
+            "sharpe": ef['sharpe'],
+            "volatility": ef['volatility'],
+            "weights": weights_list
+        },
+        'portfolio': portfolio['allocation']['portfolio'],
+        'risk_free': data['risk_free']
+    }
+
+
+def upload_file(request, file_name):
+    file_name_uuid = f'{str(uuid4())}_{file_name}'
+    tmp_file_name = './data/' + file_name_uuid
+    with open(tmp_file_name, 'wb') as tmp_file:
+        tmp_file.write(request.data)
+    print('file has been uploaded')
+    return {'status': 'success', 'message': 'file has been uploaded successfully', 'file_name': tmp_file_name}
 
 
 taskDict = {}
@@ -57,7 +94,7 @@ def process_options(options):
         ret_val = calculate_all(mu, S, latest_prices, options, 'no cache')
     else:
         ret_val = {"error": "options do not match. Either use cache result, or reuse cache or -x to calculate all"}
-
+    ret_val['uid'] = 'asd'
     return ret_val
 
 
